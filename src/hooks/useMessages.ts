@@ -130,18 +130,32 @@ export const useMessages = (currentUserId: string | undefined) => {
     try {
       console.log('Sending message from:', currentUserId, 'to:', toUserId);
       
-      // Verify that the recipient exists in the profiles table
-      const { data: recipientProfile, error: profileError } = await supabase
+      // First check if both users exist in profiles table
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', toUserId)
-        .single();
+        .in('id', [currentUserId, toUserId]);
 
-      if (profileError || !recipientProfile) {
-        console.error('Recipient not found in profiles table:', toUserId);
+      if (profilesError) {
+        console.error('Error checking profiles:', profilesError);
+        throw profilesError;
+      }
+
+      if (!profiles || profiles.length !== 2) {
+        const missingUsers = [];
+        const foundIds = profiles?.map(p => p.id) || [];
+        
+        if (!foundIds.includes(currentUserId)) {
+          missingUsers.push('Your profile');
+        }
+        if (!foundIds.includes(toUserId)) {
+          missingUsers.push('Recipient profile');
+        }
+        
+        console.error('Missing profiles:', missingUsers);
         toast({
           title: "Error",
-          description: "Recipient not found. Please try again.",
+          description: `${missingUsers.join(' and ')} not found. Please try refreshing the page.`,
           variant: "destructive"
         });
         return false;
@@ -172,7 +186,7 @@ export const useMessages = (currentUserId: string | undefined) => {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: error.message || "Failed to send message",
         variant: "destructive"
       });
       return false;

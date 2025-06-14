@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface InvestorProfile {
   id: string;
+  user_id: string;
   investor_name: string;
   investment_range_min: string;
   investment_range_max: string;
@@ -17,7 +18,7 @@ interface InvestorProfile {
 
 interface MatchInvestorsScreenRealProps {
   onBack: () => void;
-  onMessage: (investorId: string) => void;
+  onMessage: (investorUserId: string) => void;
 }
 
 const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onBack, onMessage }) => {
@@ -97,7 +98,7 @@ const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onB
                   <div className="flex gap-2 pt-2">
                     <Button
                       size="sm"
-                      onClick={() => onMessage(investor.id)}
+                      onClick={() => onMessage(investor.user_id)}
                       className="flex items-center gap-1"
                     >
                       <MessageCircle className="w-3 h-3" />

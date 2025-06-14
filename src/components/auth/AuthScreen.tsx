@@ -28,7 +28,7 @@ const AuthScreen = () => {
     setCurrentView('roleSelection');
   };
 
-  const handleRoleSelection = async (role: string) => {
+  const handleRoleSelection = async (role: 'startup' | 'investor') => {
     if (!tempUserData) return;
     
     setLoading(true);
@@ -69,8 +69,7 @@ const AuthScreen = () => {
   if (currentView === 'roleSelection') {
     return (
       <RoleSelectionScreen
-        onRoleSelect={handleRoleSelection}
-        loading={loading}
+        onSelectRole={handleRoleSelection}
       />
     );
   }

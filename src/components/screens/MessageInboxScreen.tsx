@@ -1,27 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
-
-interface Message {
-  id: string;
-  fromName: string;
-  fromRole: 'startup' | 'investor';
-  message: string;
-  timestamp: string;
-  isFromCurrentUser: boolean;
-}
-
-interface Conversation {
-  id: string;
-  participantName: string;
-  participantRole: 'startup' | 'investor';
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-}
+import { useAuth } from '@/hooks/useAuth';
+import { useMessages } from '@/hooks/useMessages';
 
 interface MessageInboxScreenProps {
   onBack: () => void;
@@ -29,73 +13,55 @@ interface MessageInboxScreenProps {
 }
 
 const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selectedUserId }) => {
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(
-    selectedUserId || null
-  );
+  const { user } = useAuth();
+  const { conversations, messages, loading, fetchMessages, sendMessage } = useMessages(user?.id);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(selectedUserId || null);
   const [newMessage, setNewMessage] = useState('');
 
-  // Mock conversations data - in real app, this would come from Supabase
-  const mockConversations: Conversation[] = [
-    {
-      id: '1',
-      participantName: 'TechVentures Capital',
-      participantRole: 'investor',
-      lastMessage: 'We would like to schedule a meeting to discuss your startup.',
-      timestamp: '2 hours ago',
-      unreadCount: 2
-    },
-    {
-      id: '2',
-      participantName: 'Growth Partners',
-      participantRole: 'investor',
-      lastMessage: 'Thank you for sharing your pitch deck.',
-      timestamp: '1 day ago',
-      unreadCount: 0
-    }
-  ];
-
-  // If selectedUserId is provided, add it as a new conversation
-  React.useEffect(() => {
-    if (selectedUserId && !selectedConversation) {
+  useEffect(() => {
+    if (selectedUserId && selectedConversation !== selectedUserId) {
       setSelectedConversation(selectedUserId);
+      fetchMessages(selectedUserId);
     }
-  }, [selectedUserId, selectedConversation]);
+  }, [selectedUserId, selectedConversation, fetchMessages]);
 
-  // Mock messages for selected conversation
-  const mockMessages: Message[] = [
-    {
-      id: '1',
-      fromName: 'TechVentures Capital',
-      fromRole: 'investor',
-      message: 'Hi, we reviewed your startup profile and are interested in learning more.',
-      timestamp: '2 hours ago',
-      isFromCurrentUser: false
-    },
-    {
-      id: '2',
-      fromName: 'You',
-      fromRole: 'startup',
-      message: 'Thank you for your interest! I would be happy to share more details.',
-      timestamp: '1 hour ago',
-      isFromCurrentUser: true
-    },
-    {
-      id: '3',
-      fromName: 'TechVentures Capital',
-      fromRole: 'investor',
-      message: 'We would like to schedule a meeting to discuss your startup.',
-      timestamp: '30 minutes ago',
-      isFromCurrentUser: false
-    }
-  ];
+  const handleConversationSelect = (userId: string) => {
+    setSelectedConversation(userId);
+    fetchMessages(userId);
+  };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // In real app, this would send the message to Supabase
-      console.log('Sending message:', newMessage, 'to user:', selectedConversation);
-      setNewMessage('');
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && selectedConversation) {
+      const success = await sendMessage(selectedConversation, newMessage);
+      if (success) {
+        setNewMessage('');
+      }
     }
   };
+
+  const getSelectedConversationName = () => {
+    if (selectedConversation === selectedUserId) {
+      return 'New Conversation';
+    }
+    const conversation = conversations.find(c => c.participantId === selectedConversation);
+    return conversation?.participantName || 'Unknown User';
+  };
+
+  const getSelectedConversationRole = () => {
+    if (selectedConversation === selectedUserId) {
+      return `User ID: ${selectedUserId}`;
+    }
+    const conversation = conversations.find(c => c.participantId === selectedConversation);
+    return conversation?.participantRole || 'unknown';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 flex items-center justify-center">
+        <div>Loading messages...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
@@ -118,20 +84,44 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {mockConversations.length === 0 ? (
+              {conversations.length === 0 && !selectedUserId ? (
                 <div className="p-6 text-center text-gray-500">
                   <p>No messages yet</p>
-                  <p className="text-sm mt-1">Start connecting with investors!</p>
+                  <p className="text-sm mt-1">Start connecting with {user?.id && conversations.length === 0 ? 'other users' : 'investors'}!</p>
                 </div>
               ) : (
                 <div className="space-y-0">
-                  {mockConversations.map((conversation) => (
+                  {/* Show new conversation if selectedUserId is provided */}
+                  {selectedUserId && !conversations.find(c => c.participantId === selectedUserId) && (
+                    <div
+                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                        selectedConversation === selectedUserId ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                      onClick={() => handleConversationSelect(selectedUserId)}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-medium text-sm">New Conversation</h4>
+                        <span className="bg-green-600 text-white rounded-full px-2 py-1 text-xs">
+                          New
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-1">
+                        <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                          User ID: {selectedUserId.slice(0, 8)}...
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600 truncate">Start a new conversation</p>
+                      <p className="text-xs text-gray-400 mt-1">Just now</p>
+                    </div>
+                  )}
+                  
+                  {conversations.map((conversation) => (
                     <div
                       key={conversation.id}
                       className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedConversation === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                        selectedConversation === conversation.participantId ? 'bg-blue-50 border-blue-200' : ''
                       }`}
-                      onClick={() => setSelectedConversation(conversation.id)}
+                      onClick={() => handleConversationSelect(conversation.participantId)}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <h4 className="font-medium text-sm">{conversation.participantName}</h4>
@@ -150,30 +140,6 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
                       <p className="text-xs text-gray-400 mt-1">{conversation.timestamp}</p>
                     </div>
                   ))}
-                  
-                  {/* Show new conversation if selectedUserId is provided */}
-                  {selectedUserId && !mockConversations.find(c => c.id === selectedUserId) && (
-                    <div
-                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedConversation === selectedUserId ? 'bg-blue-50 border-blue-200' : ''
-                      }`}
-                      onClick={() => setSelectedConversation(selectedUserId)}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-medium text-sm">New Conversation</h4>
-                        <span className="bg-green-600 text-white rounded-full px-2 py-1 text-xs">
-                          New
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-1">
-                        <span className="bg-gray-100 px-2 py-1 rounded text-xs">
-                          User ID: {selectedUserId.slice(0, 8)}...
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-600 truncate">Start a new conversation</p>
-                      <p className="text-xs text-gray-400 mt-1">Just now</p>
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>
@@ -184,48 +150,41 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
             {selectedConversation ? (
               <>
                 <CardHeader>
-                  <CardTitle>
-                    {selectedConversation === selectedUserId 
-                      ? 'New Conversation' 
-                      : mockConversations.find(c => c.id === selectedConversation)?.participantName
-                    }
-                  </CardTitle>
-                  <CardDescription>
-                    {selectedConversation === selectedUserId 
-                      ? `User ID: ${selectedUserId}` 
-                      : mockConversations.find(c => c.id === selectedConversation)?.participantRole
-                    }
-                  </CardDescription>
+                  <CardTitle>{getSelectedConversationName()}</CardTitle>
+                  <CardDescription>{getSelectedConversationRole()}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col h-full">
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
-                    {selectedConversation === selectedUserId ? (
+                    {messages.length === 0 ? (
                       <div className="text-center text-gray-500 py-8">
                         <p>Start your conversation by sending a message below!</p>
                       </div>
                     ) : (
-                      mockMessages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
-                        >
+                      messages.map((message) => {
+                        const isFromCurrentUser = message.from_user_id === user?.id;
+                        return (
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.isFromCurrentUser
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
+                            key={message.id}
+                            className={`flex ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
                           >
-                            <p className="text-sm">{message.message}</p>
-                            <p className={`text-xs mt-1 ${
-                              message.isFromCurrentUser ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
-                              {message.timestamp}
-                            </p>
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                isFromCurrentUser
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-900'
+                              }`}
+                            >
+                              <p className="text-sm">{message.message}</p>
+                              <p className={`text-xs mt-1 ${
+                                isFromCurrentUser ? 'text-blue-100' : 'text-gray-500'
+                              }`}>
+                                {new Date(message.created_at).toLocaleString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 

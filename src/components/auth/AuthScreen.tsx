@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 const AuthScreen = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register' | 'roleSelection' | 'mentorLogin'>('landing');
   const [loading, setLoading] = useState(false);
+  const [tempUserData, setTempUserData] = useState<{ fullName: string; email: string; password: string } | null>(null);
   const { signIn, signUp } = useAuth();
 
   const handleLogin = async (email: string, password: string) => {
@@ -23,11 +23,18 @@ const AuthScreen = () => {
     setLoading(false);
   };
 
-  const handleRegister = async (email: string, password: string, fullName: string) => {
+  const handleRegister = async (userData: { fullName: string; email: string; password: string }) => {
+    setTempUserData(userData);
+    setCurrentView('roleSelection');
+  };
+
+  const handleRoleSelection = async (role: string) => {
+    if (!tempUserData) return;
+    
     setLoading(true);
-    const success = await signUp(email, password, fullName);
+    const success = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, role);
     if (success) {
-      setCurrentView('roleSelection');
+      setCurrentView('landing');
     }
     setLoading(false);
   };
@@ -44,9 +51,8 @@ const AuthScreen = () => {
   if (currentView === 'login') {
     return (
       <LoginScreen
-        onBack={() => setCurrentView('landing')}
         onLogin={handleLogin}
-        loading={loading}
+        onNavigateToRegister={() => setCurrentView('register')}
       />
     );
   }
@@ -54,9 +60,8 @@ const AuthScreen = () => {
   if (currentView === 'register') {
     return (
       <RegisterScreen
-        onBack={() => setCurrentView('landing')}
-        onRegister={handleRegister}
-        loading={loading}
+        onNext={handleRegister}
+        onBackToLogin={() => setCurrentView('login')}
       />
     );
   }
@@ -64,7 +69,8 @@ const AuthScreen = () => {
   if (currentView === 'roleSelection') {
     return (
       <RoleSelectionScreen
-        onBack={() => setCurrentView('register')}
+        onRoleSelect={handleRoleSelection}
+        loading={loading}
       />
     );
   }

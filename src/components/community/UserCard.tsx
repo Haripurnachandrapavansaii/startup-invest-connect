@@ -2,13 +2,13 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Building, DollarSign } from 'lucide-react';
+import { MessageCircle, Building, DollarSign, Users } from 'lucide-react';
 
 interface User {
   id: string;
   full_name: string;
   email: string;
-  role: 'startup' | 'investor';
+  role: 'startup' | 'investor' | 'mentor';
   created_at: string;
 }
 
@@ -22,7 +22,16 @@ const UserCard: React.FC<UserCardProps> = ({ user, currentUserId, onMessage }) =
   const isCurrentUser = user.id === currentUserId;
 
   const getRoleIcon = () => {
-    return user.role === 'startup' ? <Building className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />;
+    switch (user.role) {
+      case 'startup':
+        return <Building className="w-4 h-4" />;
+      case 'investor':
+        return <DollarSign className="w-4 h-4" />;
+      case 'mentor':
+        return <Users className="w-4 h-4" />;
+      default:
+        return <Building className="w-4 h-4" />;
+    }
   };
 
   const formatJoinDate = (dateString: string) => {

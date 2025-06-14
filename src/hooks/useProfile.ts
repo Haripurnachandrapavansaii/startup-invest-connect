@@ -7,7 +7,7 @@ interface Profile {
   id: string;
   full_name: string;
   email: string;
-  role: 'startup' | 'investor';
+  role: 'startup' | 'investor' | 'mentor';
   created_at: string;
   updated_at: string;
 }
@@ -36,10 +36,22 @@ interface InvestorProfile {
   contact_email: string;
 }
 
+interface MentorProfile {
+  id: string;
+  user_id: string;
+  mentor_name: string;
+  expertise_areas: string[];
+  experience_years: number;
+  bio: string;
+  contact_email: string;
+  linkedin_url?: string;
+}
+
 export const useProfile = (userId: string | undefined) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [startupProfile, setStartupProfile] = useState<StartupProfile | null>(null);
   const [investorProfile, setInvestorProfile] = useState<InvestorProfile | null>(null);
+  const [mentorProfile, setMentorProfile] = useState<MentorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -65,7 +77,7 @@ export const useProfile = (userId: string | undefined) => {
       // Type assertion to ensure the role is properly typed
       const typedProfile: Profile = {
         ...profileData,
-        role: profileData.role as 'startup' | 'investor'
+        role: profileData.role as 'startup' | 'investor' | 'mentor'
       };
       setProfile(typedProfile);
 
@@ -96,6 +108,19 @@ export const useProfile = (userId: string | undefined) => {
 
         if (investorError) throw investorError;
         setInvestorProfile(investorData);
+      } else if (profileData.role === 'mentor') {
+        // For now, we'll just set a mock mentor profile since the table doesn't exist yet
+        // In a real implementation, you'd fetch from mentor_profiles table
+        const mockMentorProfile: MentorProfile = {
+          id: 'mock-id',
+          user_id: userId!,
+          mentor_name: profileData.full_name || 'Mentor',
+          expertise_areas: ['Business Strategy'],
+          experience_years: 5,
+          bio: 'Experienced mentor helping startups grow',
+          contact_email: profileData.email
+        };
+        setMentorProfile(mockMentorProfile);
       }
     } catch (error: any) {
       toast({
@@ -172,13 +197,41 @@ export const useProfile = (userId: string | undefined) => {
     }
   };
 
+  const saveMentorProfile = async (profileData: Omit<MentorProfile, 'id' | 'user_id'>) => {
+    try {
+      // For now, we'll just simulate saving the mentor profile
+      // In a real implementation, you'd save to mentor_profiles table
+      const mockSavedProfile: MentorProfile = {
+        id: Date.now().toString(),
+        user_id: userId!,
+        ...profileData
+      };
+      setMentorProfile(mockSavedProfile);
+      
+      toast({
+        title: "Success",
+        description: "Mentor profile saved successfully!",
+      });
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     profile,
     startupProfile,
     investorProfile,
+    mentorProfile,
     loading,
     saveStartupProfile,
     saveInvestorProfile,
+    saveMentorProfile,
     refetch: fetchProfile
   };
 };

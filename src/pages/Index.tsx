@@ -27,9 +27,11 @@ const Index = () => {
     profile, 
     startupProfile, 
     investorProfile, 
+    mentorProfile,
     loading: profileLoading, 
     saveStartupProfile, 
     saveInvestorProfile,
+    saveMentorProfile,
     refetch: refetchProfile
   } = useProfile(user?.id);
 
@@ -61,15 +63,13 @@ const Index = () => {
   };
 
   const handleMentorProfileSubmit = async (profileData: any) => {
-    // For now, we'll save mentor data in a similar way
-    // In a real app, you'd have a saveMentorProfile function
-    console.log('Mentor profile data:', profileData);
     setSetupLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    const success = await saveMentorProfile(profileData);
+    if (success) {
+      await refetchProfile();
       setCurrentScreen('dashboard');
-      setSetupLoading(false);
-    }, 1000);
+    }
+    setSetupLoading(false);
   };
 
   const handleLogout = async () => {
@@ -135,9 +135,7 @@ const Index = () => {
     );
   }
 
-  if (profile.role === 'mentor' && currentScreen === 'dashboard') {
-    // For mentors, we'll show the profile setup once and then go to dashboard
-    // In a real app, you'd check if mentor profile exists
+  if (profile.role === 'mentor' && !mentorProfile && currentScreen === 'dashboard') {
     return (
       <MentorProfileSetup 
         onSubmit={handleMentorProfileSubmit}
@@ -251,7 +249,7 @@ const Index = () => {
         } else if (profile.role === 'mentor') {
           return (
             <MentorDashboard
-              mentorName={profile.full_name || 'Mentor'}
+              mentorName={mentorProfile?.mentor_name || profile.full_name || 'Mentor'}
               onStartups={() => setCurrentScreen('dashboard')}
               onMessages={() => setCurrentScreen('messageInbox')}
               onSchedule={() => setCurrentScreen('events')}

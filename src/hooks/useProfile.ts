@@ -61,7 +61,13 @@ export const useProfile = (userId: string | undefined) => {
         .single();
 
       if (profileError) throw profileError;
-      setProfile(profileData);
+      
+      // Type assertion to ensure the role is properly typed
+      const typedProfile: Profile = {
+        ...profileData,
+        role: profileData.role as 'startup' | 'investor'
+      };
+      setProfile(typedProfile);
 
       // Fetch role-specific profile
       if (profileData.role === 'startup') {
@@ -72,7 +78,15 @@ export const useProfile = (userId: string | undefined) => {
           .maybeSingle();
 
         if (startupError) throw startupError;
-        setStartupProfile(startupData);
+        
+        if (startupData) {
+          // Type assertion to ensure the stage is properly typed
+          const typedStartupProfile: StartupProfile = {
+            ...startupData,
+            stage: startupData.stage as 'Idea' | 'MVP' | 'Revenue'
+          };
+          setStartupProfile(typedStartupProfile);
+        }
       } else if (profileData.role === 'investor') {
         const { data: investorData, error: investorError } = await supabase
           .from('investor_profiles')
@@ -106,7 +120,13 @@ export const useProfile = (userId: string | undefined) => {
         .single();
 
       if (error) throw error;
-      setStartupProfile(data);
+      
+      // Type assertion to ensure the stage is properly typed
+      const typedData: StartupProfile = {
+        ...data,
+        stage: data.stage as 'Idea' | 'MVP' | 'Revenue'
+      };
+      setStartupProfile(typedData);
       
       toast({
         title: "Success",

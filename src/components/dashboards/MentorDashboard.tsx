@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, MessageSquare, Calendar, BookOpen, Settings, LogOut, TrendingUp } from 'lucide-react';
+import { Users, MessageSquare, Calendar, BookOpen, Settings, LogOut, MessageCircle } from 'lucide-react';
 
 interface MentorDashboardProps {
   mentorName: string;
@@ -10,6 +10,7 @@ interface MentorDashboardProps {
   onMessages: () => void;
   onSchedule: () => void;
   onResources: () => void;
+  onCommunity?: () => void;
   onSettings?: () => void;
   onLogout: () => void;
 }
@@ -20,6 +21,7 @@ const MentorDashboard = ({
   onMessages,
   onSchedule,
   onResources,
+  onCommunity,
   onSettings,
   onLogout 
 }: MentorDashboardProps) => {
@@ -121,6 +123,25 @@ const MentorDashboard = ({
               </Button>
             </CardContent>
           </Card>
+
+          {onCommunity && (
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onCommunity}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-purple-600" />
+                  Community
+                </CardTitle>
+                <CardDescription>
+                  Connect with other mentors and share insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" className="w-full">
+                  Join Community
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="mt-8">

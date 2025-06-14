@@ -252,6 +252,53 @@ export type Database = {
           },
         ]
       }
+      mentor_profiles: {
+        Row: {
+          bio: string
+          created_at: string | null
+          experience: string
+          expertise: string
+          id: string
+          linkedin: string | null
+          mentor_name: string
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          bio: string
+          created_at?: string | null
+          experience: string
+          expertise: string
+          id?: string
+          linkedin?: string | null
+          mentor_name: string
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          bio?: string
+          created_at?: string | null
+          experience?: string
+          expertise?: string
+          id?: string
+          linkedin?: string | null
+          mentor_name?: string
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           created_at: string | null

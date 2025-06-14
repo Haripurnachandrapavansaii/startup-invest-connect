@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,11 +39,11 @@ interface MentorProfile {
   id: string;
   user_id: string;
   mentor_name: string;
-  expertise_areas: string[];
-  experience_years: number;
+  expertise: string;
+  experience: string;
   bio: string;
-  contact_email: string;
-  linkedin_url?: string;
+  linkedin?: string;
+  website?: string;
 }
 
 export const useProfile = (userId: string | undefined) => {
@@ -109,18 +108,14 @@ export const useProfile = (userId: string | undefined) => {
         if (investorError) throw investorError;
         setInvestorProfile(investorData);
       } else if (profileData.role === 'mentor') {
-        // For now, we'll just set a mock mentor profile since the table doesn't exist yet
-        // In a real implementation, you'd fetch from mentor_profiles table
-        const mockMentorProfile: MentorProfile = {
-          id: 'mock-id',
-          user_id: userId!,
-          mentor_name: profileData.full_name || 'Mentor',
-          expertise_areas: ['Business Strategy'],
-          experience_years: 5,
-          bio: 'Experienced mentor helping startups grow',
-          contact_email: profileData.email
-        };
-        setMentorProfile(mockMentorProfile);
+        const { data: mentorData, error: mentorError } = await supabase
+          .from('mentor_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (mentorError) throw mentorError;
+        setMentorProfile(mentorData);
       }
     } catch (error: any) {
       toast({
@@ -199,14 +194,17 @@ export const useProfile = (userId: string | undefined) => {
 
   const saveMentorProfile = async (profileData: Omit<MentorProfile, 'id' | 'user_id'>) => {
     try {
-      // For now, we'll just simulate saving the mentor profile
-      // In a real implementation, you'd save to mentor_profiles table
-      const mockSavedProfile: MentorProfile = {
-        id: Date.now().toString(),
-        user_id: userId!,
-        ...profileData
-      };
-      setMentorProfile(mockSavedProfile);
+      const { data, error } = await supabase
+        .from('mentor_profiles')
+        .upsert({
+          user_id: userId,
+          ...profileData
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setMentorProfile(data);
       
       toast({
         title: "Success",

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -254,6 +253,7 @@ const Index = () => {
               onMessages={() => setCurrentScreen('messageInbox')}
               onSchedule={() => setCurrentScreen('events')}
               onResources={() => setCurrentScreen('resources')}
+              onCommunity={() => setCurrentScreen('community')}
               onLogout={handleLogout}
             />
           );

@@ -14,7 +14,7 @@ interface MentorProfileSetupProps {
 
 const MentorProfileSetup = ({ onSubmit, loading = false }: MentorProfileSetupProps) => {
   const [formData, setFormData] = useState({
-    mentorName: '',
+    mentor_name: '',
     expertise: '',
     experience: '',
     bio: '',
@@ -50,11 +50,11 @@ const MentorProfileSetup = ({ onSubmit, loading = false }: MentorProfileSetupPro
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4">
               <div>
-                <Label htmlFor="mentorName">Mentor Name *</Label>
+                <Label htmlFor="mentor_name">Mentor Name *</Label>
                 <Input
-                  id="mentorName"
-                  value={formData.mentorName}
-                  onChange={(e) => handleInputChange('mentorName', e.target.value)}
+                  id="mentor_name"
+                  value={formData.mentor_name}
+                  onChange={(e) => handleInputChange('mentor_name', e.target.value)}
                   placeholder="Your professional name"
                   required
                 />

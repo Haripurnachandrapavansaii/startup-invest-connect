@@ -5,13 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 interface RegisterScreenProps {
-  onNext: (userData: { fullName: string; email: string; password: string }) => void;
-  onBackToLogin: () => void;
+  role: 'startup' | 'investor' | 'mentor';
+  onBackToRoleSelection: () => void;
+  onSwitchToLogin: () => void;
 }
 
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNext, onBackToLogin }) => {
+const RegisterScreen: React.FC<RegisterScreenProps> = ({ role, onBackToRoleSelection, onSwitchToLogin }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,14 +28,31 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNext, onBackToLogin }
       });
       return;
     }
-    onNext({ fullName, email, password });
+    // Handle registration logic here
+    console.log('Registration data:', { fullName, email, password, role });
+  };
+
+  const getRoleColor = () => {
+    switch (role) {
+      case 'startup': return 'text-green-600';
+      case 'investor': return 'text-blue-600';
+      case 'mentor': return 'text-purple-600';
+      default: return 'text-gray-600';
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">Create Account</CardTitle>
+          <div className="flex items-center gap-2 mb-4">
+            <Button variant="ghost" onClick={onBackToRoleSelection} size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Create <span className={getRoleColor()}>{role}</span> Account
+          </CardTitle>
           <CardDescription>Join the InnovateX community</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -68,10 +87,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNext, onBackToLogin }
             />
           </div>
           <Button onClick={handleNext} className="w-full">
-            Next
+            Create Account
           </Button>
           <div className="text-center">
-            <Button variant="link" onClick={onBackToLogin}>
+            <Button variant="link" onClick={onSwitchToLogin}>
               Already have an account? Login
             </Button>
           </div>

@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 interface LoginScreenProps {
-  onLogin: (email: string, password: string) => void;
-  onNavigateToRegister: () => void;
+  onBackToRoleSelection: () => void;
+  onSwitchToRegister: () => void;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onNavigateToRegister }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onBackToRoleSelection, onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { toast } = useToast();
@@ -25,15 +26,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onNavigateToRegister
       });
       return;
     }
-    onLogin(email, password);
+    // Handle login logic here
+    console.log('Login data:', { email, password });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">Welcome to InnovateX</CardTitle>
-          <CardDescription>Connect startups with investors</CardDescription>
+          <div className="flex items-center gap-2 mb-4">
+            <Button variant="ghost" onClick={onBackToRoleSelection} size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
+          <CardDescription>Sign in to your InnovateX account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -57,10 +64,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onNavigateToRegister
             />
           </div>
           <Button onClick={handleLogin} className="w-full">
-            Login
+            Sign In
           </Button>
           <div className="text-center">
-            <Button variant="link" onClick={onNavigateToRegister}>
+            <Button variant="link" onClick={onSwitchToRegister}>
               Don't have an account? Register
             </Button>
           </div>

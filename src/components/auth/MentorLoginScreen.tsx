@@ -7,18 +7,20 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Users } from 'lucide-react';
 
 interface MentorLoginScreenProps {
-  onBack: () => void;
-  onLogin: (credentials: { email: string; password: string }) => void;
-  loading?: boolean;
+  onBackToRoleSelection: () => void;
 }
 
-const MentorLoginScreen = ({ onBack, onLogin, loading = false }: MentorLoginScreenProps) => {
+const MentorLoginScreen = ({ onBackToRoleSelection }: MentorLoginScreenProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin({ email, password });
+    setLoading(true);
+    // Handle mentor login logic here
+    console.log('Mentor login:', { email, password });
+    setTimeout(() => setLoading(false), 1000);
   };
 
   return (
@@ -26,7 +28,7 @@ const MentorLoginScreen = ({ onBack, onLogin, loading = false }: MentorLoginScre
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center gap-2 mb-4">
-            <Button variant="ghost" onClick={onBack} size="sm">
+            <Button variant="ghost" onClick={onBackToRoleSelection} size="sm">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
@@ -69,7 +71,7 @@ const MentorLoginScreen = ({ onBack, onLogin, loading = false }: MentorLoginScre
           
           <div className="mt-4 text-center text-sm text-gray-600">
             <p>Don't have a mentor account? 
-              <Button variant="link" onClick={onBack} className="text-purple-600 p-0 ml-1">
+              <Button variant="link" onClick={onBackToRoleSelection} className="text-purple-600 p-0 ml-1">
                 Sign up here
               </Button>
             </p>

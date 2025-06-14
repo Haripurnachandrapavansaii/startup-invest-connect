@@ -11,7 +11,7 @@ import {
   Trash2, 
   FileText, 
   Calendar,
-  FileSize,
+  HardDrive,
   BarChart3
 } from 'lucide-react';
 import { usePitchDecks } from '@/hooks/usePitchDecks';
@@ -188,7 +188,7 @@ const PitchDeckManager: React.FC<PitchDeckManagerProps> = ({
                       <h4 className="font-medium">{deck.file_name}</h4>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
-                          <FileSize className="w-3 h-3" />
+                          <HardDrive className="w-3 h-3" />
                           {formatFileSize(deck.file_size)}
                         </span>
                         <span className="flex items-center gap-1">

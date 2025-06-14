@@ -12,8 +12,7 @@ import {
   Eye, 
   TrendingUp,
   Target,
-  Settings,
-  Bell
+  Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationButton from '@/components/ui/notifications';
@@ -37,6 +36,13 @@ interface DashboardStats {
   pitchViews: number;
 }
 
+interface Activity {
+  id: string;
+  type: 'profile_view' | 'message' | 'pitch_download';
+  description: string;
+  timestamp: string;
+}
+
 const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
   startupName,
   onFindInvestors,
@@ -54,52 +60,85 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
     messages: 0,
     pitchViews: 0
   });
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchRealData();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchRealData = async () => {
     try {
-      // In a real implementation, these would be actual database queries
-      // For now, we'll simulate some realistic data
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Simulate fetching real stats
-        setStats({
-          profileViews: Math.floor(Math.random() * 50) + 10,
-          investorMatches: Math.floor(Math.random() * 8) + 2,
-          messages: Math.floor(Math.random() * 15) + 3,
-          pitchViews: Math.floor(Math.random() * 25) + 5
-        });
-      }
+      if (!user) return;
+
+      // Fetch real message count
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('to_user_id', user.id);
+
+      if (messagesError) throw messagesError;
+
+      // Fetch real investor count for matches
+      const { data: investorsData, error: investorsError } = await supabase
+        .from('investor_profiles')
+        .select('id');
+
+      if (investorsError) throw investorsError;
+
+      // Update stats with real data
+      setStats({
+        profileViews: 0, // This would need to be tracked separately
+        investorMatches: investorsData?.length || 0,
+        messages: messagesData?.length || 0,
+        pitchViews: 0 // This would need to be tracked separately
+      });
+
+      // Fetch real recent messages for activity feed
+      const { data: recentMessages, error: recentError } = await supabase
+        .from('messages')
+        .select('id, from_user_id, created_at, profiles!from_user_id(full_name)')
+        .eq('to_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (recentError) throw recentError;
+
+      // Convert to activity format
+      const realActivities: Activity[] = recentMessages?.map(msg => ({
+        id: msg.id,
+        type: 'message' as const,
+        description: `New message from ${(msg.profiles as any)?.full_name || 'Unknown User'}`,
+        timestamp: new Date(msg.created_at).toLocaleDateString()
+      })) || [];
+
+      setActivities(realActivities);
+
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching real data:', error);
+      // Set empty state on error
+      setStats({
+        profileViews: 0,
+        investorMatches: 0,
+        messages: 0,
+        pitchViews: 0
+      });
+      setActivities([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Sample notifications
-  const notifications = [
-    {
-      id: '1',
-      title: 'New Investor Interest',
-      message: 'TechVentures Capital viewed your pitch deck',
-      type: 'info' as const,
-      timestamp: '2 hours ago',
-      read: false
-    },
-    {
-      id: '2',
-      title: 'Message Received',
-      message: 'You have a new message from Sarah Chen',
-      type: 'success' as const,
-      timestamp: '1 day ago',
-      read: false
-    }
-  ];
+  // Real notifications from database
+  const notifications = activities.slice(0, 2).map((activity, index) => ({
+    id: activity.id,
+    title: activity.type === 'message' ? 'New Message' : 'New Activity',
+    message: activity.description,
+    type: 'info' as const,
+    timestamp: activity.timestamp,
+    read: false
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
@@ -143,6 +182,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
                   <p className="text-2xl font-bold text-blue-600">
                     {loading ? '...' : stats.profileViews}
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">Coming soon</p>
                 </div>
                 <Eye className="h-8 w-8 text-blue-600" />
               </div>
@@ -153,7 +193,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Investor Matches</p>
+                  <p className="text-sm font-medium text-gray-600">Available Investors</p>
                   <p className="text-2xl font-bold text-green-600">
                     {loading ? '...' : stats.investorMatches}
                   </p>
@@ -185,6 +225,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
                   <p className="text-2xl font-bold text-orange-600">
                     {loading ? '...' : stats.pitchViews}
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">Coming soon</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-orange-600" />
               </div>
@@ -201,7 +242,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
                 Find Investors
               </CardTitle>
               <CardDescription>
-                Discover investors interested in your sector and stage
+                Browse {stats.investorMatches} available investors on the platform
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -235,7 +276,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
                 Messages
               </CardTitle>
               <CardDescription>
-                Communicate with interested investors
+                {stats.messages > 0 ? `${stats.messages} messages waiting` : 'No new messages'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -301,7 +342,7 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
           </Card>
         </div>
 
-        {/* Recent Activity */}
+        {/* Activity and Tips */}
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -309,27 +350,24 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
               <CardDescription>Your latest interactions and updates</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium text-sm">Profile viewed by TechVentures Capital</p>
-                  <p className="text-xs text-gray-600">2 hours ago</p>
+              {loading ? (
+                <div className="text-center py-4 text-gray-500">Loading activity...</div>
+              ) : activities.length > 0 ? (
+                activities.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-sm">{activity.description}</p>
+                      <p className="text-xs text-gray-600">{activity.timestamp}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No recent activity</p>
+                  <p className="text-xs mt-1">Activity will appear here as you use the platform</p>
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium text-sm">New message from Sarah Chen</p>
-                  <p className="text-xs text-gray-600">1 day ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-                <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium text-sm">Pitch deck downloaded by Innovation Partners</p>
-                  <p className="text-xs text-gray-600">2 days ago</p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -342,19 +380,19 @@ const StartupDashboardReal: React.FC<StartupDashboardRealProps> = ({
               <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2"></div>
-                  Keep your pitch deck updated with latest metrics
+                  Complete your startup profile to attract more investors
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>
-                  Respond to investor messages within 24 hours
+                  Upload a compelling pitch deck with clear financials
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2"></div>
-                  Attend networking events to meet potential investors
+                  Respond to investor messages within 24 hours
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2"></div>
-                  Share regular updates about your progress
+                  Network actively in the community section
                 </li>
               </ul>
             </CardContent>

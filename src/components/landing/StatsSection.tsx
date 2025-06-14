@@ -1,36 +1,93 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, Users, Handshake, Globe } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const StatsSection = () => {
+  const [realStats, setRealStats] = useState({
+    users: 0,
+    startups: 0,
+    investors: 0,
+    mentors: 0,
+    events: 0,
+    resources: 0
+  });
+
+  useEffect(() => {
+    fetchRealStats();
+  }, []);
+
+  const fetchRealStats = async () => {
+    try {
+      // Fetch user counts by role
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('role');
+
+      if (profilesError) throw profilesError;
+
+      // Count users by role
+      const roleCounts = profilesData?.reduce((acc: any, profile) => {
+        acc[profile.role] = (acc[profile.role] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      // Fetch events count
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('id');
+
+      if (eventsError) throw eventsError;
+
+      // Fetch resources count
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from('resources')
+        .select('id');
+
+      if (resourcesError) throw resourcesError;
+
+      setRealStats({
+        users: profilesData?.length || 0,
+        startups: roleCounts.startup || 0,
+        investors: roleCounts.investor || 0,
+        mentors: roleCounts.mentor || 0,
+        events: eventsData?.length || 0,
+        resources: resourcesData?.length || 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching real stats:', error);
+    }
+  };
+
   const stats = [
     {
       icon: Users,
-      value: "2,500+",
+      value: realStats.users > 0 ? `${realStats.users}+` : "Growing",
       label: "Registered Users",
       description: "Entrepreneurs, investors, and mentors from around the world",
       color: "text-blue-600"
     },
     {
       icon: TrendingUp,
-      value: "$120M+",
-      label: "Total Funding",
-      description: "Successfully connected through our platform",
+      value: realStats.startups > 0 ? `${realStats.startups}+` : "Active",
+      label: "Startups",
+      description: "Innovative companies seeking funding and mentorship",
       color: "text-green-600"
     },
     {
       icon: Handshake,
-      value: "450+",
-      label: "Successful Matches",
-      description: "Startups paired with their ideal investors",
+      value: realStats.investors > 0 ? `${realStats.investors}+` : "Ready",
+      label: "Investors",
+      description: "Experienced investors looking for promising opportunities",
       color: "text-purple-600"
     },
     {
       icon: Globe,
-      value: "50+",
-      label: "Countries",
-      description: "Global network spanning six continents",
+      value: realStats.mentors > 0 ? `${realStats.mentors}+` : "Expert",
+      label: "Mentors",
+      description: "Seasoned professionals ready to guide entrepreneurs",
       color: "text-orange-600"
     }
   ];
@@ -40,11 +97,10 @@ const StatsSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Trusted by Innovators Worldwide
+            Join Our Growing Community
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Our platform has become the go-to destination for startups seeking investment 
-            and investors looking for the next big opportunity.
+            Be part of a thriving ecosystem where innovation meets investment and mentorship drives success.
           </p>
         </div>
         
@@ -62,6 +118,14 @@ const StatsSection = () => {
             </Card>
           ))}
         </div>
+
+        {realStats.users === 0 && (
+          <div className="text-center mt-8">
+            <p className="text-gray-500 text-sm">
+              Be among the first to join our platform and help build this community!
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

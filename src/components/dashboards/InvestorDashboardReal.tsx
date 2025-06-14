@@ -44,10 +44,10 @@ const InvestorDashboardReal = ({
   const [allStartups, setAllStartups] = useState<StartupProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
-    startupsViewed: 0,
-    activeDeals: 0,
-    portfolioCompanies: 0,
-    messagesReceived: 0
+    startupsAvailable: 0,
+    messagesReceived: 0,
+    eventsAvailable: 0,
+    resourcesAvailable: 0
   });
 
   useEffect(() => {
@@ -60,6 +60,7 @@ const InvestorDashboardReal = ({
       const { data, error } = await supabase
         .from('startup_profiles')
         .select('*')
+        .order('created_at', { ascending: false })
         .limit(3);
 
       if (error) throw error;
@@ -71,12 +72,44 @@ const InvestorDashboardReal = ({
 
   const fetchInvestorStats = async () => {
     try {
-      // In a real implementation, these would be actual database queries
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get real startup count
+      const { data: startupsData, error: startupsError } = await supabase
+        .from('startup_profiles')
+        .select('id');
+
+      if (startupsError) throw startupsError;
+
+      // Get real messages count
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('to_user_id', user.id);
+
+      if (messagesError) throw messagesError;
+
+      // Get real events count
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('id')
+        .gte('event_date', new Date().toISOString());
+
+      if (eventsError) throw eventsError;
+
+      // Get real resources count
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from('resources')
+        .select('id');
+
+      if (resourcesError) throw resourcesError;
+
       setStats({
-        startupsViewed: Math.floor(Math.random() * 100) + 20,
-        activeDeals: Math.floor(Math.random() * 5) + 1,
-        portfolioCompanies: Math.floor(Math.random() * 15) + 3,
-        messagesReceived: Math.floor(Math.random() * 25) + 5
+        startupsAvailable: startupsData?.length || 0,
+        messagesReceived: messagesData?.length || 0,
+        eventsAvailable: eventsData?.length || 0,
+        resourcesAvailable: resourcesData?.length || 0
       });
     } catch (error) {
       console.error('Error fetching investor stats:', error);
@@ -109,24 +142,15 @@ const InvestorDashboardReal = ({
     }
   };
 
-  const notifications = [
-    {
-      id: '1',
-      title: 'New Startup Match',
-      message: 'AI-powered FinTech startup matches your criteria',
-      type: 'info' as const,
-      timestamp: '2 hours ago',
-      read: false
-    },
-    {
-      id: '2',
-      title: 'Pitch Deck Updated',
-      message: 'GreenTech Solutions updated their Series A deck',
-      type: 'success' as const,
-      timestamp: '1 day ago',
-      read: false
-    }
-  ];
+  // Real notifications based on actual data
+  const notifications = featuredStartups.slice(0, 2).map((startup, index) => ({
+    id: startup.id,
+    title: 'New Startup Registered',
+    message: `${startup.startup_name} is seeking ${startup.funding_needed} in funding`,
+    type: 'info' as const,
+    timestamp: 'Recently',
+    read: false
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -165,8 +189,8 @@ const InvestorDashboardReal = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Startups Viewed</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.startupsViewed}</p>
+                  <p className="text-sm font-medium text-gray-600">Available Startups</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.startupsAvailable}</p>
                 </div>
                 <Eye className="h-8 w-8 text-blue-600" />
               </div>
@@ -177,34 +201,34 @@ const InvestorDashboardReal = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Deals</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.activeDeals}</p>
-                </div>
-                <Target className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Portfolio</p>
-                  <p className="text-2xl font-bold text-purple-600">{stats.portfolioCompanies}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm font-medium text-gray-600">Messages</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.messagesReceived}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.messagesReceived}</p>
                 </div>
-                <MessageSquare className="h-8 w-8 text-orange-600" />
+                <MessageSquare className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Upcoming Events</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.eventsAvailable}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Resources</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.resourcesAvailable}</p>
+                </div>
+                <BookOpen className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -218,7 +242,7 @@ const InvestorDashboardReal = ({
                 Browse Startups
               </CardTitle>
               <CardDescription>
-                Explore startups looking for investment
+                Explore {stats.startupsAvailable} startups looking for investment
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -273,7 +297,7 @@ const InvestorDashboardReal = ({
                 Events
               </CardTitle>
               <CardDescription>
-                Attend startup events and demo days
+                {stats.eventsAvailable} upcoming events available
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -290,7 +314,7 @@ const InvestorDashboardReal = ({
                 Resources
               </CardTitle>
               <CardDescription>
-                Investment guides and market insights
+                {stats.resourcesAvailable} investment guides and market insights
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -388,8 +412,8 @@ const InvestorDashboardReal = ({
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Featured Startups</CardTitle>
-              <CardDescription>Recently registered startups seeking investment</CardDescription>
+              <CardTitle>Recently Registered Startups</CardTitle>
+              <CardDescription>Latest startups seeking investment</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {featuredStartups.length === 0 ? (
@@ -406,6 +430,7 @@ const InvestorDashboardReal = ({
                       <h4 className="font-semibold">{startup.startup_name}</h4>
                       <p className="text-sm text-gray-600">{startup.industry} • {startup.stage}</p>
                       <p className="text-xs text-gray-500 line-clamp-2 mt-1">{startup.description}</p>
+                      <p className="text-xs font-medium text-green-600 mt-1">Seeking: {startup.funding_needed}</p>
                     </div>
                     <div className="flex gap-2 ml-4">
                       <Button size="sm" variant="outline" onClick={() => onViewProfile(startup.id)}>
@@ -423,26 +448,26 @@ const InvestorDashboardReal = ({
 
           <Card>
             <CardHeader>
-              <CardTitle>Investment Insights</CardTitle>
-              <CardDescription>Key metrics and trends</CardDescription>
+              <CardTitle>Platform Overview</CardTitle>
+              <CardDescription>Current activity and growth metrics</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium">FinTech</span>
-                  <span className="text-sm text-blue-600 font-semibold">Hot Sector</span>
+                  <span className="text-sm font-medium">Active Startups</span>
+                  <span className="text-sm text-blue-600 font-semibold">{stats.startupsAvailable}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="text-sm font-medium">Series A</span>
-                  <span className="text-sm text-green-600 font-semibold">High Activity</span>
+                  <span className="text-sm font-medium">Your Messages</span>
+                  <span className="text-sm text-green-600 font-semibold">{stats.messagesReceived}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm font-medium">AI/ML</span>
-                  <span className="text-sm text-purple-600 font-semibold">Trending</span>
+                  <span className="text-sm font-medium">Upcoming Events</span>
+                  <span className="text-sm text-purple-600 font-semibold">{stats.eventsAvailable}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <span className="text-sm font-medium">Healthcare</span>
-                  <span className="text-sm text-orange-600 font-semibold">Growing</span>
+                  <span className="text-sm font-medium">Resources Available</span>
+                  <span className="text-sm text-orange-600 font-semibold">{stats.resourcesAvailable}</span>
                 </div>
               </div>
             </CardContent>

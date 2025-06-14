@@ -34,7 +34,7 @@ const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onB
       const { data, error } = await supabase
         .from('investor_profiles')
         .select('*')
-        .limit(10);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setInvestors(data || []);
@@ -48,7 +48,7 @@ const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onB
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 flex items-center justify-center">
-        <div>Loading investors...</div>
+        <div className="text-lg">Loading investors...</div>
       </div>
     );
   }
@@ -83,12 +83,12 @@ const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onB
                   )}
                   <div>
                     <h4 className="font-medium text-sm text-gray-700">Preferred Stages:</h4>
-                    <div className="flex gap-2 mt-1">
-                      {investor.preferred_stages.map(stage => (
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {investor.preferred_stages?.map(stage => (
                         <span key={stage} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                           {stage}
                         </span>
-                      ))}
+                      )) || <span className="text-xs text-gray-500">Not specified</span>}
                     </div>
                   </div>
                   <div>
@@ -108,6 +108,7 @@ const MatchInvestorsScreenReal: React.FC<MatchInvestorsScreenRealProps> = ({ onB
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-1"
+                      disabled
                     >
                       <Eye className="w-3 h-3" />
                       View Profile

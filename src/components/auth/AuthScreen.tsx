@@ -1,138 +1,192 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Rocket, Users, TrendingUp, UserCircle } from 'lucide-react';
+import LoginScreen from './LoginScreen';
+import RegisterScreen from './RegisterScreen';
+import RoleSelectionScreen from './RoleSelectionScreen';
+import MentorLoginScreen from './MentorLoginScreen';
 import { useAuth } from '@/hooks/useAuth';
 
-const AuthScreen: React.FC = () => {
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'startup' | 'investor'>('startup');
+const AuthScreen = () => {
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register' | 'roleSelection' | 'mentorLogin'>('landing');
   const [loading, setLoading] = useState(false);
-
   const { signIn, signUp } = useAuth();
 
-  const handleLogin = async () => {
-    if (!loginEmail || !loginPassword) return;
+  const handleLogin = async (email: string, password: string) => {
     setLoading(true);
-    await signIn(loginEmail, loginPassword);
+    const success = await signIn(email, password);
+    if (success) {
+      setCurrentView('landing');
+    }
     setLoading(false);
   };
 
-  const handleSignUp = async () => {
-    if (!signupEmail || !signupPassword || !fullName) return;
+  const handleRegister = async (email: string, password: string, fullName: string) => {
     setLoading(true);
-    await signUp(signupEmail, signupPassword, fullName, role);
+    const success = await signUp(email, password, fullName);
+    if (success) {
+      setCurrentView('roleSelection');
+    }
     setLoading(false);
   };
+
+  const handleMentorLogin = async (credentials: { email: string; password: string }) => {
+    setLoading(true);
+    const success = await signIn(credentials.email, credentials.password);
+    if (success) {
+      setCurrentView('landing');
+    }
+    setLoading(false);
+  };
+
+  if (currentView === 'login') {
+    return (
+      <LoginScreen
+        onBack={() => setCurrentView('landing')}
+        onLogin={handleLogin}
+        loading={loading}
+      />
+    );
+  }
+
+  if (currentView === 'register') {
+    return (
+      <RegisterScreen
+        onBack={() => setCurrentView('landing')}
+        onRegister={handleRegister}
+        loading={loading}
+      />
+    );
+  }
+
+  if (currentView === 'roleSelection') {
+    return (
+      <RoleSelectionScreen
+        onBack={() => setCurrentView('register')}
+      />
+    );
+  }
+
+  if (currentView === 'mentorLogin') {
+    return (
+      <MentorLoginScreen
+        onBack={() => setCurrentView('landing')}
+        onLogin={handleMentorLogin}
+        loading={loading}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">Welcome to InnovateX</CardTitle>
-          <CardDescription>Connect startups with investors</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
-                <Input
-                  id="login-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
-                <Input
-                  id="login-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleLogin} className="w-full" disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
-              </Button>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={signupEmail}
-                  onChange={(e) => setSignupEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={signupPassword}
-                  onChange={(e) => setSignupPassword(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>I am a:</Label>
-                <div className="flex gap-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      checked={role === 'startup'}
-                      onChange={() => setRole('startup')}
-                      className="rounded"
-                    />
-                    <span>Startup</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      checked={role === 'investor'}
-                      onChange={() => setRole('investor')}
-                      className="rounded"
-                    />
-                    <span>Investor</span>
-                  </label>
-                </div>
-              </div>
-              <Button onClick={handleSignUp} className="w-full" disabled={loading}>
-                {loading ? 'Creating Account...' : 'Sign Up'}
-              </Button>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Mentor Login Button */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentView('mentorLogin')}
+          className="bg-purple-100 text-purple-700 hover:bg-purple-200 flex items-center gap-2"
+        >
+          <UserCircle className="h-4 w-4" />
+          Mentor Login
+        </Button>
+      </div>
+
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            Connect <span className="text-blue-600">Startups</span> with <span className="text-purple-600">Investors</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            The ultimate platform for entrepreneurs to showcase their ideas and for investors to discover the next big opportunity.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => setCurrentView('register')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Get Started
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => setCurrentView('login')}
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Rocket className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <CardTitle>For Startups</CardTitle>
+              <CardDescription>
+                Showcase your startup, upload pitch decks, and connect with potential investors
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Upload and share pitch decks</li>
+                <li>• Match with relevant investors</li>
+                <li>• Get funding opportunities</li>
+                <li>• Access mentorship programs</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <TrendingUp className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+              <CardTitle>For Investors</CardTitle>
+              <CardDescription>
+                Discover promising startups and connect with innovative entrepreneurs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Browse curated startups</li>
+                <li>• View detailed pitch decks</li>
+                <li>• Direct messaging system</li>
+                <li>• Investment tracking tools</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <CardTitle>For Mentors</CardTitle>
+              <CardDescription>
+                Guide startups on their journey to success and share your expertise
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Mentor promising startups</li>
+                <li>• Share industry expertise</li>
+                <li>• Build your network</li>
+                <li>• Make a difference</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center mt-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
+          <p className="text-gray-600 mb-8">Join thousands of entrepreneurs and investors already using our platform</p>
+          <Button 
+            size="lg" 
+            onClick={() => setCurrentView('register')}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
+            Create Your Account
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

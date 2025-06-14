@@ -2,12 +2,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, X, Check, Mail } from 'lucide-react';
+import { Bell, X, Check, Mail, Archive } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 
 interface Notification {
   id: string;
@@ -25,8 +31,11 @@ interface NotificationButtonProps {
 const NotificationButton = ({ notifications = [] }: NotificationButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationList, setNotificationList] = useState<Notification[]>(notifications);
+  const [activeTab, setActiveTab] = useState('unread');
 
-  const unreadCount = notificationList.filter(n => !n.read).length;
+  const unreadNotifications = notificationList.filter(n => !n.read);
+  const readNotifications = notificationList.filter(n => n.read);
+  const unreadCount = unreadNotifications.length;
 
   const markAsRead = (id: string) => {
     setNotificationList(prev => 
@@ -50,9 +59,63 @@ const NotificationButton = ({ notifications = [] }: NotificationButtonProps) => 
     setNotificationList(prev => prev.filter(n => n.id !== id));
   };
 
-  const clearAllNotifications = () => {
-    setNotificationList([]);
+  const clearAllRead = () => {
+    setNotificationList(prev => prev.filter(n => !n.read));
   };
+
+  const renderNotifications = (notifications: Notification[]) => (
+    notifications.length === 0 ? (
+      <div className="p-4 text-center text-gray-500">
+        {activeTab === 'unread' ? 'No new notifications' : 'No read notifications'}
+      </div>
+    ) : (
+      notifications.map((notification) => (
+        <div
+          key={notification.id}
+          className={`p-3 border-b last:border-b-0 hover:bg-gray-50 ${
+            !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1 cursor-pointer" onClick={() => markAsRead(notification.id)}>
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-sm font-medium">{notification.title}</h4>
+                {!notification.read && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
+              <p className="text-xs text-gray-400">{notification.timestamp}</p>
+            </div>
+            <div className="flex items-center gap-1 ml-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => notification.read ? markAsUnread(notification.id) : markAsRead(notification.id)}
+                className="h-6 w-6 p-0"
+                title={notification.read ? 'Mark as unread' : 'Mark as read'}
+              >
+                {notification.read ? (
+                  <Mail className="h-3 w-3" />
+                ) : (
+                  <Check className="h-3 w-3" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => clearNotification(notification.id)}
+                className="h-6 w-6 p-0"
+                title="Remove notification"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))
+    )
+  );
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -76,82 +139,50 @@ const NotificationButton = ({ notifications = [] }: NotificationButtonProps) => 
                   {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
                 </CardDescription>
               </div>
-              {notificationList.length > 0 && (
-                <div className="flex gap-1">
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={markAllAsRead}
-                      className="text-xs h-6"
-                    >
-                      Mark all read
-                    </Button>
-                  )}
+              <div className="flex gap-1">
+                {unreadCount > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={clearAllNotifications}
-                    className="text-xs h-6 text-red-600 hover:text-red-700"
+                    onClick={markAllAsRead}
+                    className="text-xs h-6"
                   >
-                    Clear all
+                    Mark all read
                   </Button>
-                </div>
-              )}
+                )}
+                {readNotifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllRead}
+                    className="text-xs h-6 text-red-600 hover:text-red-700"
+                    title="Clear all read notifications"
+                  >
+                    <Archive className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="p-0 max-h-80 overflow-y-auto">
-            {notificationList.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No notifications yet
+          <CardContent className="p-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mx-3 mb-2">
+                <TabsTrigger value="unread" className="text-xs">
+                  Unread ({unreadCount})
+                </TabsTrigger>
+                <TabsTrigger value="read" className="text-xs">
+                  Read ({readNotifications.length})
+                </TabsTrigger>
+              </TabsList>
+              <div className="max-h-80 overflow-y-auto">
+                <TabsContent value="unread" className="m-0">
+                  {renderNotifications(unreadNotifications)}
+                </TabsContent>
+                <TabsContent value="read" className="m-0">
+                  {renderNotifications(readNotifications)}
+                </TabsContent>
               </div>
-            ) : (
-              notificationList.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 border-b last:border-b-0 hover:bg-gray-50 ${
-                    !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 cursor-pointer" onClick={() => markAsRead(notification.id)}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-medium">{notification.title}</h4>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
-                      <p className="text-xs text-gray-400">{notification.timestamp}</p>
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => notification.read ? markAsUnread(notification.id) : markAsRead(notification.id)}
-                        className="h-6 w-6 p-0"
-                        title={notification.read ? 'Mark as unread' : 'Mark as read'}
-                      >
-                        {notification.read ? (
-                          <Mail className="h-3 w-3" />
-                        ) : (
-                          <Check className="h-3 w-3" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => clearNotification(notification.id)}
-                        className="h-6 w-6 p-0"
-                        title="Remove notification"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+            </Tabs>
           </CardContent>
         </Card>
       </PopoverContent>

@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useAdmin } from '@/hooks/useAdmin';
 import AuthScreen from '@/components/auth/AuthScreen';
+import LandingPage from '@/components/landing/LandingPage';
 import StartupProfileSetup from '@/components/profile/StartupProfileSetup';
 import InvestorProfileSetup from '@/components/profile/InvestorProfileSetup';
 import MentorProfileSetup from '@/components/profile/MentorProfileSetup';
@@ -40,6 +42,7 @@ const Index = () => {
   const [selectedStartupId, setSelectedStartupId] = React.useState<string>('');
   const [selectedUserId, setSelectedUserId] = React.useState<string>('');
   const [setupLoading, setSetupLoading] = React.useState(false);
+  const [showAuth, setShowAuth] = React.useState(false);
 
   const handleStartupProfileSubmit = async (profileData: any) => {
     setSetupLoading(true);
@@ -74,6 +77,15 @@ const Index = () => {
   const handleLogout = async () => {
     await signOut();
     setCurrentScreen('dashboard');
+    setShowAuth(false);
+  };
+
+  const handleGetStarted = () => {
+    setShowAuth(true);
+  };
+
+  const handleBackToLanding = () => {
+    setShowAuth(false);
   };
 
   const handleViewProfile = (startupId: string) => {
@@ -96,9 +108,14 @@ const Index = () => {
     );
   }
 
-  // Show auth screen if user is not logged in
+  // Show auth screen if user clicked get started
+  if (showAuth && !user) {
+    return <AuthScreen onBack={handleBackToLanding} />;
+  }
+
+  // Show landing page if user is not logged in
   if (!user) {
-    return <AuthScreen />;
+    return <LandingPage onGetStarted={handleGetStarted} />;
   }
 
   // Show loading while profile is being fetched

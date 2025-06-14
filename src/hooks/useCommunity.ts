@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -112,7 +111,7 @@ export const useCommunity = () => {
       
       // Filter and cast users to ensure they have valid roles
       const validUsers = (data || []).filter(user => 
-        user.role === 'startup' || user.role === 'investor'
+        user.role === 'startup' || user.role === 'investor' || user.role === 'mentor'
       ) as User[];
       
       setUsers(validUsers);

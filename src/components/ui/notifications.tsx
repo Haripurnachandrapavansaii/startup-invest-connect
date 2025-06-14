@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, X, Check, MarkAsUnread } from 'lucide-react';
+import { Bell, X, Check, Mail } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -133,7 +133,7 @@ const NotificationButton = ({ notifications = [] }: NotificationButtonProps) => 
                         title={notification.read ? 'Mark as unread' : 'Mark as read'}
                       >
                         {notification.read ? (
-                          <MarkAsUnread className="h-3 w-3" />
+                          <Mail className="h-3 w-3" />
                         ) : (
                           <Check className="h-3 w-3" />
                         )}

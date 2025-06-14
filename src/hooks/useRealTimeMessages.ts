@@ -30,6 +30,7 @@ export const useRealTimeMessages = (currentUserId?: string, selectedConversation
   const { toast } = useToast();
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const channelRef = useRef<any>();
+  const messageChannelRef = useRef<any>();
 
   useEffect(() => {
     if (!currentUserId || !selectedConversation) return;
@@ -40,6 +41,9 @@ export const useRealTimeMessages = (currentUserId?: string, selectedConversation
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+      }
+      if (messageChannelRef.current) {
+        supabase.removeChannel(messageChannelRef.current);
       }
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -80,32 +84,69 @@ export const useRealTimeMessages = (currentUserId?: string, selectedConversation
     // Create a unique channel for this conversation
     const conversationId = [currentUserId, selectedConversation].sort().join('-');
     
-    channelRef.current = supabase
-      .channel(`conversation-${conversationId}`)
+    // Set up message updates subscription
+    messageChannelRef.current = supabase
+      .channel(`messages-${conversationId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: `or(and(from_user_id.eq.${currentUserId},to_user_id.eq.${selectedConversation}),and(from_user_id.eq.${selectedConversation},to_user_id.eq.${currentUserId}))`
+          table: 'messages'
         },
         async (payload) => {
-          // Fetch the complete message with profile data
-          const { data: newMessage, error } = await supabase
-            .from('messages')
-            .select(`
-              *,
-              from_profile:profiles!messages_from_user_id_fkey(full_name, role)
-            `)
-            .eq('id', payload.new.id)
-            .single();
+          const newMessage = payload.new as any;
+          
+          // Only process messages for this conversation
+          if ((newMessage.from_user_id === currentUserId && newMessage.to_user_id === selectedConversation) ||
+              (newMessage.from_user_id === selectedConversation && newMessage.to_user_id === currentUserId)) {
+            
+            // Fetch the complete message with profile data
+            const { data: messageWithProfile, error } = await supabase
+              .from('messages')
+              .select(`
+                *,
+                from_profile:profiles!messages_from_user_id_fkey(full_name, role)
+              `)
+              .eq('id', newMessage.id)
+              .single();
 
-          if (!error && newMessage) {
-            setMessages(prev => [...prev, newMessage]);
+            if (!error && messageWithProfile) {
+              setMessages(prev => {
+                // Check if message already exists to avoid duplicates
+                const exists = prev.some(msg => msg.id === messageWithProfile.id);
+                if (exists) return prev;
+                return [...prev, messageWithProfile];
+              });
+            }
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const updatedMessage = payload.new as any;
+          
+          // Update message in state if it's part of this conversation
+          if ((updatedMessage.from_user_id === currentUserId && updatedMessage.to_user_id === selectedConversation) ||
+              (updatedMessage.from_user_id === selectedConversation && updatedMessage.to_user_id === currentUserId)) {
+            
+            setMessages(prev => prev.map(msg => 
+              msg.id === updatedMessage.id ? { ...msg, ...updatedMessage } : msg
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    // Set up typing indicator subscription
+    channelRef.current = supabase
+      .channel(`typing-${conversationId}`)
       .on('presence', { event: 'sync' }, () => {
         const state = channelRef.current.presenceState();
         const typing = Object.keys(state).map(userId => ({

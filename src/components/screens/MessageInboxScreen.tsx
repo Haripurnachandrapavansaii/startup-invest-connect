@@ -33,6 +33,7 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
   useEffect(() => {
     if (user?.id) {
       fetchConversations();
+      setupConversationsRealTime();
     }
   }, [user?.id]);
 
@@ -77,6 +78,13 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
             timestamp: new Date(message.created_at).toLocaleString(),
             unreadCount: 0
           });
+        } else {
+          // Update with latest message if this is more recent
+          const existing = conversationMap.get(partnerId)!;
+          if (new Date(message.created_at) > new Date(existing.timestamp.replace(/,/g, ''))) {
+            existing.lastMessage = message.message;
+            existing.timestamp = new Date(message.created_at).toLocaleString();
+          }
         }
       });
 
@@ -100,6 +108,53 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selecte
     } finally {
       setLoading(false);
     }
+  };
+
+  const setupConversationsRealTime = () => {
+    if (!user?.id) return;
+
+    // Listen for new messages to update conversations list
+    const channel = supabase
+      .channel('conversations-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const newMessage = payload.new as any;
+          
+          // Only update if this user is involved in the message
+          if (newMessage.from_user_id === user.id || newMessage.to_user_id === user.id) {
+            // Refresh conversations to get updated list
+            fetchConversations();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const updatedMessage = payload.new as any;
+          
+          // Only update if this user is involved in the message
+          if (updatedMessage.from_user_id === user.id || updatedMessage.to_user_id === user.id) {
+            // Refresh conversations to get updated unread counts
+            fetchConversations();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   };
 
   if (loading) {

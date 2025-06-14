@@ -1,126 +1,103 @@
 
 import React from 'react';
-import { useAppState } from '@/hooks/useAppState';
-import LoginScreen from '@/components/auth/LoginScreen';
-import RegisterScreen from '@/components/auth/RegisterScreen';
-import RoleSelectionScreen from '@/components/auth/RoleSelectionScreen';
-import ProfileSetupStartup from '@/components/profile/ProfileSetupStartup';
-import ProfileSetupInvestor from '@/components/profile/ProfileSetupInvestor';
-import StartupDashboard from '@/components/dashboards/StartupDashboard';
-import InvestorDashboard from '@/components/dashboards/InvestorDashboard';
-import MatchInvestorsScreen from '@/components/screens/MatchInvestorsScreen';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import AuthScreen from '@/components/auth/AuthScreen';
+import StartupProfileSetup from '@/components/profile/StartupProfileSetup';
+import InvestorProfileSetup from '@/components/profile/InvestorProfileSetup';
+import StartupDashboardReal from '@/components/dashboards/StartupDashboardReal';
+import InvestorDashboardReal from '@/components/dashboards/InvestorDashboardReal';
+import MatchInvestorsScreenReal from '@/components/screens/MatchInvestorsScreenReal';
 import PitchUploadScreen from '@/components/screens/PitchUploadScreen';
 import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
 
 const Index = () => {
-  const {
-    appState,
-    login,
-    logout,
-    setTempRegistrationData,
-    setRole,
-    saveStartupProfile,
-    saveInvestorProfile,
-    navigateToScreen
-  } = useAppState();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { 
+    profile, 
+    startupProfile, 
+    investorProfile, 
+    loading: profileLoading, 
+    saveStartupProfile, 
+    saveInvestorProfile 
+  } = useProfile(user?.id);
 
-  // Mock matched startups for investor dashboard
-  const mockMatchedStartups = [
-    {
-      id: '1',
-      startupName: 'FinFlow',
-      industry: 'FinTech',
-      stage: 'MVP' as const,
-      tags: 'AI, Payments, B2B',
-      description: 'Revolutionary payment processing platform using AI to reduce transaction costs by 40%.',
-      fundingNeeded: '2 crores'
-    },
-    {
-      id: '2',
-      startupName: 'HealthAI',
-      industry: 'HealthTech',
-      stage: 'Revenue' as const,
-      tags: 'AI, Healthcare, SaaS',
-      description: 'AI-powered diagnostic platform helping doctors make faster and more accurate diagnoses.',
-      fundingNeeded: '5 crores'
+  const [currentScreen, setCurrentScreen] = React.useState<string>('dashboard');
+  const [setupLoading, setSetupLoading] = React.useState(false);
+
+  const handleStartupProfileSubmit = async (profileData: any) => {
+    setSetupLoading(true);
+    const success = await saveStartupProfile(profileData);
+    if (success) {
+      setCurrentScreen('dashboard');
     }
-  ];
+    setSetupLoading(false);
+  };
 
-  const handleRegistrationNext = (userData: { fullName: string; email: string; password: string }) => {
-    setTempRegistrationData(userData);
-    navigateToScreen('roleSelection');
+  const handleInvestorProfileSubmit = async (profileData: any) => {
+    setSetupLoading(true);
+    const success = await saveInvestorProfile(profileData);
+    if (success) {
+      setCurrentScreen('dashboard');
+    }
+    setSetupLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    setCurrentScreen('dashboard');
   };
 
   const handleMessage = (targetId: string) => {
     console.log('Opening message thread with:', targetId);
-    navigateToScreen('messageInbox');
+    setCurrentScreen('messageInbox');
   };
 
-  const renderCurrentScreen = () => {
-    switch (appState.currentScreen) {
-      case 'login':
-        return (
-          <LoginScreen
-            onLogin={login}
-            onNavigateToRegister={() => navigateToScreen('register')}
-          />
-        );
-      
-      case 'register':
-        return (
-          <RegisterScreen
-            onNext={handleRegistrationNext}
-            onBackToLogin={() => navigateToScreen('login')}
-          />
-        );
-      
-      case 'roleSelection':
-        return (
-          <RoleSelectionScreen
-            onSelectRole={setRole}
-          />
-        );
-      
-      case 'profileSetupStartup':
-        return (
-          <ProfileSetupStartup
-            onSubmit={saveStartupProfile}
-          />
-        );
-      
-      case 'profileSetupInvestor':
-        return (
-          <ProfileSetupInvestor
-            onSubmit={saveInvestorProfile}
-          />
-        );
-      
-      case 'startupDashboard':
-        return (
-          <StartupDashboard
-            startupName={appState.startupProfile?.startupName || 'Startup'}
-            onFindInvestors={() => navigateToScreen('matchInvestors')}
-            onUploadPitch={() => navigateToScreen('pitchUpload')}
-            onMessages={() => navigateToScreen('messageInbox')}
-            onLogout={logout}
-          />
-        );
-      
-      case 'investorDashboard':
-        return (
-          <InvestorDashboard
-            investorName={appState.investorProfile?.investorName || 'Investor'}
-            matchedStartups={mockMatchedStartups}
-            onViewProfile={(startupId) => console.log('View profile:', startupId)}
-            onMessage={handleMessage}
-            onLogout={logout}
-          />
-        );
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-lg">Setting up your profile...</div>
+      </div>
+    );
+  }
+
+  // Check if user needs to complete profile setup
+  if (profile.role === 'startup' && !startupProfile && currentScreen === 'dashboard') {
+    return (
+      <StartupProfileSetup 
+        onSubmit={handleStartupProfileSubmit}
+        loading={setupLoading}
+      />
+    );
+  }
+
+  if (profile.role === 'investor' && !investorProfile && currentScreen === 'dashboard') {
+    return (
+      <InvestorProfileSetup 
+        onSubmit={handleInvestorProfileSubmit}
+        loading={setupLoading}
+      />
+    );
+  }
+
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
       case 'matchInvestors':
         return (
-          <MatchInvestorsScreen
-            onBack={() => navigateToScreen('startupDashboard')}
+          <MatchInvestorsScreenReal
+            onBack={() => setCurrentScreen('dashboard')}
             onMessage={handleMessage}
           />
         );
@@ -128,32 +105,38 @@ const Index = () => {
       case 'pitchUpload':
         return (
           <PitchUploadScreen
-            onBack={() => navigateToScreen('startupDashboard')}
+            onBack={() => setCurrentScreen('dashboard')}
           />
         );
 
       case 'messageInbox':
         return (
           <MessageInboxScreen
-            onBack={() => {
-              // Navigate back to appropriate dashboard based on user role
-              const userRole = appState.currentUser?.role || appState.tempRegistrationData?.role;
-              if (userRole === 'startup') {
-                navigateToScreen('startupDashboard');
-              } else {
-                navigateToScreen('investorDashboard');
-              }
-            }}
+            onBack={() => setCurrentScreen('dashboard')}
           />
         );
-      
+
       default:
-        return (
-          <LoginScreen
-            onLogin={login}
-            onNavigateToRegister={() => navigateToScreen('register')}
-          />
-        );
+        if (profile.role === 'startup') {
+          return (
+            <StartupDashboardReal
+              startupName={startupProfile?.startup_name || 'Startup'}
+              onFindInvestors={() => setCurrentScreen('matchInvestors')}
+              onUploadPitch={() => setCurrentScreen('pitchUpload')}
+              onMessages={() => setCurrentScreen('messageInbox')}
+              onLogout={handleLogout}
+            />
+          );
+        } else {
+          return (
+            <InvestorDashboardReal
+              investorName={investorProfile?.investor_name || 'Investor'}
+              onViewProfile={(startupId) => console.log('View profile:', startupId)}
+              onMessage={handleMessage}
+              onLogout={handleLogout}
+            />
+          );
+        }
     }
   };
 

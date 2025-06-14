@@ -9,7 +9,178 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      investor_profiles: {
+        Row: {
+          contact_email: string
+          created_at: string | null
+          id: string
+          investment_range_max: string
+          investment_range_min: string
+          investor_name: string
+          preferred_stages: string[] | null
+          sectors_interested: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string | null
+          id?: string
+          investment_range_max: string
+          investment_range_min: string
+          investor_name: string
+          preferred_stages?: string[] | null
+          sectors_interested?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string | null
+          id?: string
+          investment_range_max?: string
+          investment_range_min?: string
+          investor_name?: string
+          preferred_stages?: string[] | null
+          sectors_interested?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          created_at: string | null
+          from_user_id: string
+          id: string
+          message: string
+          read: boolean | null
+          subject: string | null
+          to_user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          from_user_id: string
+          id?: string
+          message: string
+          read?: boolean | null
+          subject?: string | null
+          to_user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          from_user_id?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          subject?: string | null
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          id: string
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      startup_profiles: {
+        Row: {
+          created_at: string | null
+          description: string
+          funding_needed: string
+          id: string
+          industry: string
+          pitch_deck_url: string | null
+          stage: string
+          startup_name: string
+          tags: string | null
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          funding_needed: string
+          id?: string
+          industry: string
+          pitch_deck_url?: string | null
+          stage: string
+          startup_name: string
+          tags?: string | null
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          funding_needed?: string
+          id?: string
+          industry?: string
+          pitch_deck_url?: string | null
+          stage?: string
+          startup_name?: string
+          tags?: string | null
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

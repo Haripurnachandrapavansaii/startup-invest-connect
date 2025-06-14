@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +11,7 @@ import MentorProfileSetup from '@/components/profile/MentorProfileSetup';
 import StartupDashboardReal from '@/components/dashboards/StartupDashboardReal';
 import InvestorDashboardReal from '@/components/dashboards/InvestorDashboardReal';
 import MentorDashboard from '@/components/dashboards/MentorDashboard';
-import MatchInvestorsScreenReal from '@/components/screens/MatchInvestorsScreenReal';
+import EnhancedMatchingScreen from '@/components/screens/EnhancedMatchingScreen';
 import PitchUploadScreen from '@/components/screens/PitchUploadScreen';
 import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
 import StartupProfileViewScreen from '@/components/screens/StartupProfileViewScreen';
@@ -172,8 +171,9 @@ const Index = () => {
 
       case 'matchInvestors':
         return (
-          <MatchInvestorsScreenReal
+          <EnhancedMatchingScreen
             onBack={() => setCurrentScreen('dashboard')}
+            onViewProfile={handleViewProfile}
             onMessage={handleMessage}
           />
         );

@@ -23,7 +23,7 @@ const CommunityScreen: React.FC<CommunityScreenProps> = ({ onBack, onMessage }) 
   const { posts, users, loading, createPost, likePost, addComment } = useCommunity();
   const [activeTab, setActiveTab] = useState<'feed' | 'people'>('feed');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<'all' | 'startup' | 'investor'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'startup' | 'investor' | 'mentor'>('all');
   const [showCreatePost, setShowCreatePost] = useState(false);
 
   const filteredUsers = users.filter(u => {
@@ -168,12 +168,13 @@ const CommunityScreen: React.FC<CommunityScreenProps> = ({ onBack, onMessage }) 
                       </div>
                       <select
                         value={filterRole}
-                        onChange={(e) => setFilterRole(e.target.value as 'all' | 'startup' | 'investor')}
+                        onChange={(e) => setFilterRole(e.target.value as 'all' | 'startup' | 'investor' | 'mentor')}
                         className="px-3 py-2 border border-gray-300 rounded-md"
                       >
                         <option value="all">All Roles</option>
                         <option value="startup">Startups</option>
                         <option value="investor">Investors</option>
+                        <option value="mentor">Mentors</option>
                       </select>
                     </div>
                   </CardContent>

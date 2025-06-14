@@ -169,7 +169,7 @@ const CommunityScreen: React.FC<CommunityScreenProps> = ({ onBack, onMessage }) 
                       <select
                         value={filterRole}
                         onChange={(e) => setFilterRole(e.target.value as 'all' | 'startup' | 'investor' | 'mentor')}
-                        className="px-3 py-2 border border-gray-300 rounded-md"
+                        className="px-3 py-2 border border-gray-300 rounded-md bg-white z-10"
                       >
                         <option value="all">All Roles</option>
                         <option value="startup">Startups</option>

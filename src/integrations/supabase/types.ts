@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      event_registrations: {
+        Row: {
+          event_id: string | null
+          id: string
+          registered_at: string
+          user_id: string | null
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          registered_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          registered_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_date: string
+          event_type: string
+          id: string
+          location: string | null
+          max_attendees: number | null
+          organizer_id: string | null
+          registration_required: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          registration_required?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          registration_required?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_profiles: {
         Row: {
           contact_email: string
@@ -107,6 +193,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_admin: boolean | null
           role: string
           updated_at: string | null
         }
@@ -115,6 +202,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_admin?: boolean | null
           role: string
           updated_at?: string | null
         }
@@ -123,10 +211,58 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_admin?: boolean | null
           role?: string
           updated_at?: string | null
         }
         Relationships: []
+      }
+      resources: {
+        Row: {
+          author_id: string | null
+          content_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          resource_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          resource_type?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          resource_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       startup_profiles: {
         Row: {

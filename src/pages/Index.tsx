@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useAdmin } from '@/hooks/useAdmin';
 import AuthScreen from '@/components/auth/AuthScreen';
 import StartupProfileSetup from '@/components/profile/StartupProfileSetup';
 import InvestorProfileSetup from '@/components/profile/InvestorProfileSetup';
@@ -11,6 +12,9 @@ import MatchInvestorsScreenReal from '@/components/screens/MatchInvestorsScreenR
 import PitchUploadScreen from '@/components/screens/PitchUploadScreen';
 import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
 import StartupProfileViewScreen from '@/components/screens/StartupProfileViewScreen';
+import EventsScreen from '@/components/screens/EventsScreen';
+import ResourcesScreen from '@/components/screens/ResourcesScreen';
+import AdminScreen from '@/components/screens/AdminScreen';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -22,6 +26,8 @@ const Index = () => {
     saveStartupProfile, 
     saveInvestorProfile 
   } = useProfile(user?.id);
+
+  const { isAdmin } = useAdmin(user?.id);
 
   const [currentScreen, setCurrentScreen] = React.useState<string>('dashboard');
   const [selectedStartupId, setSelectedStartupId] = React.useState<string>('');
@@ -136,6 +142,29 @@ const Index = () => {
           />
         );
 
+      case 'events':
+        return (
+          <EventsScreen
+            onBack={() => setCurrentScreen('dashboard')}
+            currentUserId={user.id}
+          />
+        );
+
+      case 'resources':
+        return (
+          <ResourcesScreen
+            onBack={() => setCurrentScreen('dashboard')}
+          />
+        );
+
+      case 'admin':
+        return (
+          <AdminScreen
+            onBack={() => setCurrentScreen('dashboard')}
+            currentUserId={user.id}
+          />
+        );
+
       default:
         if (profile.role === 'startup') {
           return (
@@ -144,6 +173,9 @@ const Index = () => {
               onFindInvestors={() => setCurrentScreen('matchInvestors')}
               onUploadPitch={() => setCurrentScreen('pitchUpload')}
               onMessages={() => setCurrentScreen('messageInbox')}
+              onEvents={() => setCurrentScreen('events')}
+              onResources={() => setCurrentScreen('resources')}
+              onAdmin={isAdmin ? () => setCurrentScreen('admin') : undefined}
               onLogout={handleLogout}
             />
           );
@@ -153,6 +185,9 @@ const Index = () => {
               investorName={investorProfile?.investor_name || 'Investor'}
               onViewProfile={handleViewProfile}
               onMessage={handleMessage}
+              onEvents={() => setCurrentScreen('events')}
+              onResources={() => setCurrentScreen('resources')}
+              onAdmin={isAdmin ? () => setCurrentScreen('admin') : undefined}
               onLogout={handleLogout}
             />
           );

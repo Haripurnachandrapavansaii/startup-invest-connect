@@ -1,255 +1,222 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  Building2, 
-  TrendingUp, 
-  MessageSquare, 
-  Users, 
-  Eye, 
-  Send,
-  LogOut,
-  DollarSign,
-  Calendar
-} from 'lucide-react';
-
-interface StartupProfile {
-  id: string;
-  user_id: string;
-  startup_name: string;
-  industry: string;
-  stage: string;
-  website: string | null;
-  description: string;
-  tags: string | null;
-  funding_needed: string;
-  created_at: string;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, MessageSquare, TrendingUp, Calendar, BookOpen, Settings, LogOut, Users } from 'lucide-react';
 
 interface InvestorDashboardRealProps {
   investorName: string;
   onViewProfile: (startupId: string) => void;
   onMessage: (userId: string) => void;
+  onEvents: () => void;
+  onResources: () => void;
+  onAdmin?: () => void;
   onLogout: () => void;
 }
 
-const InvestorDashboardReal: React.FC<InvestorDashboardRealProps> = ({
-  investorName,
-  onViewProfile,
+const InvestorDashboardReal = ({ 
+  investorName, 
+  onViewProfile, 
   onMessage,
-  onLogout
-}) => {
-  const { user } = useAuth();
-  const [startups, setStartups] = useState<StartupProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStartups();
-  }, []);
-
-  const fetchStartups = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('startup_profiles')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
-        .limit(10);
-
-      if (error) throw error;
-      setStartups(data || []);
-    } catch (error) {
-      console.error('Error fetching startups:', error);
-    } finally {
-      setLoading(false);
+  onEvents,
+  onResources,
+  onAdmin,
+  onLogout 
+}: InvestorDashboardRealProps) => {
+  // Mock startup data for demo
+  const featuredStartups = [
+    {
+      id: '1',
+      name: 'TechFlow',
+      industry: 'SaaS',
+      stage: 'Series A',
+      description: 'AI-powered workflow automation platform'
+    },
+    {
+      id: '2', 
+      name: 'GreenEnergy Solutions',
+      industry: 'CleanTech',
+      stage: 'Seed',
+      description: 'Renewable energy management system'
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 flex items-center justify-center">
-        <div>Loading dashboard...</div>
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {investorName}
-            </h1>
-            <p className="text-gray-600">Discover promising startups to invest in</p>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome back, {investorName}!</h1>
+            <p className="text-gray-600 mt-2">Discover promising startups and investment opportunities</p>
           </div>
-          <Button variant="outline" onClick={onLogout} className="flex items-center gap-2">
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Building2 className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Startups</p>
-                  <p className="text-2xl font-bold">{startups.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Growth Stage</p>
-                  <p className="text-2xl font-bold">{startups.filter(s => s.stage === 'Revenue').length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Users className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">MVP Stage</p>
-                  <p className="text-2xl font-bold">{startups.filter(s => s.stage === 'MVP').length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <MessageSquare className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Idea Stage</p>
-                  <p className="text-2xl font-bold">{startups.filter(s => s.stage === 'Idea').length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Startup Listings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Available Startups
-            </CardTitle>
-            <CardDescription>
-              Browse and connect with promising startups looking for investment
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {startups.map((startup) => (
-                <Card key={startup.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{startup.startup_name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary">{startup.industry}</Badge>
-                          <Badge variant="outline">{startup.stage}</Badge>
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                      {startup.description}
-                    </p>
-                    
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="w-4 h-4 text-green-600" />
-                        <span className="font-medium">Funding Needed:</span>
-                        <span>{startup.funding_needed}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        <span className="font-medium">Listed:</span>
-                        <span>{new Date(startup.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    {startup.tags && (
-                      <div className="mb-4">
-                        <div className="flex flex-wrap gap-1">
-                          {startup.tags.split(',').map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag.trim()}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => onViewProfile(startup.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View Profile
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => onMessage(startup.user_id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Send className="w-4 h-4" />
-                        Message
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {startups.length === 0 && (
-              <div className="text-center py-8">
-                <Building2 className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500">No startups available at the moment</p>
-              </div>
+          <div className="flex gap-2">
+            {onAdmin && (
+              <Button 
+                variant="outline" 
+                onClick={onAdmin}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Admin
+              </Button>
             )}
-          </CardContent>
-        </Card>
+            <Button 
+              variant="outline" 
+              onClick={onLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-blue-600" />
+                Browse Startups
+              </CardTitle>
+              <CardDescription>
+                Explore startups looking for investment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full">
+                Start Browsing
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onMessage('')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-purple-600" />
+                Messages
+              </CardTitle>
+              <CardDescription>
+                Communicate with startup founders
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                View Messages
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Portfolio
+              </CardTitle>
+              <CardDescription>
+                Track your investment portfolio
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" disabled>
+                Coming Soon
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onEvents}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                Events
+              </CardTitle>
+              <CardDescription>
+                Attend startup events and demo days
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                View Events
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onResources}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-red-600" />
+                Resources
+              </CardTitle>
+              <CardDescription>
+                Investment guides and market insights
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Browse Resources
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-indigo-600" />
+                Network
+              </CardTitle>
+              <CardDescription>
+                Connect with other investors
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" disabled>
+                Coming Soon
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Featured Startups</CardTitle>
+              <CardDescription>Promising startups seeking investment</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {featuredStartups.map((startup) => (
+                <div key={startup.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 className="font-semibold">{startup.name}</h4>
+                    <p className="text-sm text-gray-600">{startup.industry} • {startup.stage}</p>
+                    <p className="text-xs text-gray-500">{startup.description}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => onViewProfile(startup.id)}>
+                      View
+                    </Button>
+                    <Button size="sm" onClick={() => onMessage(startup.id)}>
+                      Contact
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Investment Tips</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Diversify your startup portfolio across different industries</li>
+                <li>• Look for strong founding teams with relevant experience</li>
+                <li>• Attend networking events to discover new opportunities</li>
+                <li>• Review pitch decks and financial projections carefully</li>
+                <li>• Consider the market size and growth potential</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

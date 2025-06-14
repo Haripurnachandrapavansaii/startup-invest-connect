@@ -25,7 +25,7 @@ interface InvestorProfile {
   user_id: string;
 }
 
-export const useMatching = (userRole: 'startup' | 'investor', userId?: string) => {
+export const useMatching = (userRole: 'startup' | 'investor' | 'mentor', userId?: string) => {
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -36,13 +36,16 @@ export const useMatching = (userRole: 'startup' | 'investor', userId?: string) =
   const { toast } = useToast();
 
   useEffect(() => {
-    if (userId) {
+    if (userId && userRole !== 'mentor') {
       fetchMatches();
+    } else {
+      setLoading(false);
+      setMatches([]);
     }
   }, [userId, userRole, filters]);
 
   const fetchMatches = async () => {
-    if (!userId) return;
+    if (!userId || userRole === 'mentor') return;
 
     setLoading(true);
     try {

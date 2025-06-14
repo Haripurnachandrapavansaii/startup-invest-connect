@@ -28,7 +28,12 @@ export const useRecommendations = (userId?: string) => {
 
   const { profile, startupProfile, investorProfile } = useProfile(userId);
   const userRole = profile?.role as 'startup' | 'investor' | 'mentor';
-  const { matches } = useMatching(userRole, userId);
+  
+  // Only use matching for startup and investor roles
+  const { matches } = useMatching(
+    userRole === 'mentor' ? 'startup' : userRole, // Fallback to 'startup' for mentors to avoid type error
+    userRole === 'mentor' ? undefined : userId // Don't pass userId for mentors
+  );
 
   useEffect(() => {
     if (profile && userId) {
@@ -51,6 +56,25 @@ export const useRecommendations = (userId?: string) => {
           investorProfile,
           matches || []
         );
+      } else if (profile?.role === 'mentor') {
+        // For mentors, generate basic recommendations without matches
+        newRecommendations = [
+          {
+            id: 'mentor-networking',
+            type: 'networking',
+            title: 'Connect with Entrepreneurs',
+            description: 'Expand your mentoring network by connecting with startups in your expertise areas',
+            priority: 'medium',
+            category: 'Networking',
+            estimatedImpact: 'Build network',
+            factors: {
+              profileCompleteness: 0.8,
+              activityLevel: 0.6,
+              matchingSuccess: 0.5,
+              industryTrends: 0.7
+            }
+          }
+        ];
       }
 
       // Filter out dismissed recommendations

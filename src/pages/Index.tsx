@@ -28,7 +28,8 @@ const Index = () => {
     investorProfile, 
     loading: profileLoading, 
     saveStartupProfile, 
-    saveInvestorProfile 
+    saveInvestorProfile,
+    refetch: refetchProfile
   } = useProfile(user?.id);
 
   const { isAdmin } = useAdmin(user?.id);
@@ -43,6 +44,7 @@ const Index = () => {
     setSetupLoading(true);
     const success = await saveStartupProfile(profileData);
     if (success) {
+      await refetchProfile(); // Refresh profile data
       setCurrentScreen('dashboard');
     }
     setSetupLoading(false);
@@ -52,6 +54,7 @@ const Index = () => {
     setSetupLoading(true);
     const success = await saveInvestorProfile(profileData);
     if (success) {
+      await refetchProfile(); // Refresh profile data
       setCurrentScreen('dashboard');
     }
     setSetupLoading(false);
@@ -60,6 +63,7 @@ const Index = () => {
   const handleLogout = async () => {
     await signOut();
     setCurrentScreen('dashboard');
+    setIsMentorMode(false);
   };
 
   const handleViewProfile = (startupId: string) => {
@@ -87,7 +91,7 @@ const Index = () => {
     setCurrentScreen('dashboard');
   };
 
-  if (authLoading || profileLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-lg">Loading...</div>
@@ -95,16 +99,23 @@ const Index = () => {
     );
   }
 
+  // Show auth screen if user is not logged in
   if (!user) {
     return <AuthScreen />;
   }
 
-  if (!profile) {
+  // Show loading while profile is being fetched
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-lg">Setting up your profile...</div>
       </div>
     );
+  }
+
+  // If profile doesn't exist, something went wrong - show auth screen
+  if (!profile) {
+    return <AuthScreen />;
   }
 
   // Check if user needs to complete profile setup
@@ -229,7 +240,7 @@ const Index = () => {
         if (profile.role === 'startup') {
           return (
             <StartupDashboardReal
-              startupName={startupProfile?.startup_name || 'Startup'}
+              startupName={startupProfile?.startup_name || profile.full_name || 'Startup'}
               onFindInvestors={() => setCurrentScreen('matchInvestors')}
               onUploadPitch={() => setCurrentScreen('pitchUpload')}
               onMessages={() => setCurrentScreen('messageInbox')}
@@ -243,7 +254,7 @@ const Index = () => {
         } else {
           return (
             <InvestorDashboardReal
-              investorName={investorProfile?.investor_name || 'Investor'}
+              investorName={investorProfile?.investor_name || profile.full_name || 'Investor'}
               onViewProfile={handleViewProfile}
               onMessage={handleMessage}
               onEvents={() => setCurrentScreen('events')}

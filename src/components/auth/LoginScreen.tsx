@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -15,19 +15,20 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ onBackToRoleSelection, onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       return;
     }
-    // Handle login logic here
-    console.log('Login data:', { email, password });
+    
+    setLoading(true);
+    const success = await signIn(email, password);
+    setLoading(false);
+    
+    // If successful, the user will be redirected automatically by the auth state change
+    console.log('Login attempt completed:', success);
   };
 
   return (
@@ -51,6 +52,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBackToRoleSelection, onSwit
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -61,13 +63,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBackToRoleSelection, onSwit
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
-          <Button onClick={handleLogin} className="w-full">
-            Sign In
+          <Button onClick={handleLogin} className="w-full" disabled={loading || !email || !password}>
+            {loading ? 'Signing in...' : 'Sign In'}
           </Button>
           <div className="text-center">
-            <Button variant="link" onClick={onSwitchToRegister}>
+            <Button variant="link" onClick={onSwitchToRegister} disabled={loading}>
               Don't have an account? Register
             </Button>
           </div>

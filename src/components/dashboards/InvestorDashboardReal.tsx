@@ -22,6 +22,7 @@ interface InvestorDashboardRealProps {
   onEvents: () => void;
   onResources: () => void;
   onCommunity: () => void;
+  onRecommendations: () => void;
   onAdmin?: () => void;
   onLogout: () => void;
 }
@@ -33,6 +34,7 @@ const InvestorDashboardReal = ({
   onEvents,
   onResources,
   onCommunity,
+  onRecommendations,
   onAdmin,
   onLogout 
 }: InvestorDashboardRealProps) => {
@@ -40,7 +42,6 @@ const InvestorDashboardReal = ({
   const [showAllStartups, setShowAllStartups] = useState(false);
   const [allStartups, setAllStartups] = useState<StartupProfile[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currentScreen, setCurrentScreen] = useState('browse');
 
   useEffect(() => {
     fetchFeaturedStartups();
@@ -170,7 +171,7 @@ const InvestorDashboardReal = ({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" onClick={() => setCurrentScreen('recommendations')}>
+              <Button className="w-full" onClick={onRecommendations}>
                 View Recommendations
               </Button>
             </CardContent>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -250,6 +249,7 @@ const Index = () => {
               onEvents={() => setCurrentScreen('events')}
               onResources={() => setCurrentScreen('resources')}
               onCommunity={() => setCurrentScreen('community')}
+              onRecommendations={() => setCurrentScreen('recommendations')}
               onAdmin={isAdmin ? () => setCurrentScreen('admin') : undefined}
               onLogout={handleLogout}
             />

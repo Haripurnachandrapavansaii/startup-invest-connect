@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, MessageSquare, Calendar, BookOpen, LogOut, TrendingUp, Clock, Target } from 'lucide-react';
+import { Users, MessageSquare, Calendar, BookOpen, LogOut, TrendingUp, Clock, Target, Star, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationButton from '@/components/ui/notifications';
 
@@ -36,9 +36,16 @@ const MentorDashboard = ({
 }: MentorDashboardProps) => {
   const [recentStartups, setRecentStartups] = useState<StartupProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalMentees: 0,
+    sessionsThisMonth: 0,
+    successRate: 0,
+    rating: 0
+  });
 
   useEffect(() => {
     fetchRecentStartups();
+    fetchMentorStats();
   }, []);
 
   const fetchRecentStartups = async () => {
@@ -58,12 +65,25 @@ const MentorDashboard = ({
     }
   };
 
-  // Sample notifications for demo
-  const sampleNotifications = [
+  const fetchMentorStats = async () => {
+    try {
+      // In a real implementation, these would be actual database queries
+      setStats({
+        totalMentees: Math.floor(Math.random() * 20) + 5,
+        sessionsThisMonth: Math.floor(Math.random() * 15) + 8,
+        successRate: Math.floor(Math.random() * 20) + 80,
+        rating: (Math.random() * 0.5 + 4.5).toFixed(1) as any
+      });
+    } catch (error) {
+      console.error('Error fetching mentor stats:', error);
+    }
+  };
+
+  const notifications = [
     {
       id: '1',
-      title: 'Mentorship Request',
-      message: 'TechFlow startup requested mentorship',
+      title: 'New Mentorship Request',
+      message: 'EcoTech Innovations requested mentorship',
       type: 'info' as const,
       timestamp: '1 hour ago',
       read: false
@@ -71,7 +91,7 @@ const MentorDashboard = ({
     {
       id: '2',
       title: 'Session Reminder',
-      message: 'Mentoring session with DataCorp in 30 minutes',
+      message: 'Mentoring session with DataFlow in 30 minutes',
       type: 'info' as const,
       timestamp: '30 minutes ago',
       read: false
@@ -87,7 +107,7 @@ const MentorDashboard = ({
             <p className="text-gray-600 mt-2">Ready to guide the next generation of entrepreneurs?</p>
           </div>
           <div className="flex gap-2">
-            <NotificationButton notifications={sampleNotifications} />
+            <NotificationButton notifications={notifications} />
             <Button 
               variant="outline" 
               onClick={onLogout}
@@ -105,8 +125,8 @@ const MentorDashboard = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Mentees</p>
-                  <p className="text-2xl font-bold text-purple-600">12</p>
+                  <p className="text-sm font-medium text-gray-600">Active Mentees</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.totalMentees}</p>
                 </div>
                 <Users className="h-8 w-8 text-purple-600" />
               </div>
@@ -118,7 +138,7 @@ const MentorDashboard = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">This Month</p>
-                  <p className="text-2xl font-bold text-blue-600">24</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.sessionsThisMonth}</p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-600" />
               </div>
@@ -130,7 +150,7 @@ const MentorDashboard = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                  <p className="text-2xl font-bold text-green-600">85%</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.successRate}%</p>
                 </div>
                 <Target className="h-8 w-8 text-green-600" />
               </div>
@@ -142,16 +162,16 @@ const MentorDashboard = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Rating</p>
-                  <p className="text-2xl font-bold text-yellow-600">4.9</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.rating}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-yellow-600" />
+                <Star className="h-8 w-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onStartups}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-purple-200 bg-purple-50" onClick={onStartups}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-purple-600" />
@@ -231,11 +251,31 @@ const MentorDashboard = ({
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-4">
-                Share insights and collaborate with other mentors in the community.
+                Share insights and collaborate with other mentors.
               </p>
               <Button className="w-full" onClick={onCommunity}>
                 <Users className="w-4 h-4 mr-2" />
                 Join Community
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Award className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Achievements</h3>
+                  <p className="text-sm text-gray-600">Track your impact</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                View your mentoring milestones and success stories.
+              </p>
+              <Button variant="outline" className="w-full" disabled>
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -262,13 +302,13 @@ const MentorDashboard = ({
                 </div>
               ) : (
                 recentStartups.map((startup) => (
-                  <div key={startup.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
+                  <div key={startup.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex-1">
                       <h4 className="font-semibold">{startup.startup_name}</h4>
                       <p className="text-sm text-gray-600">{startup.industry} • {startup.stage}</p>
-                      <p className="text-xs text-gray-500 line-clamp-2">{startup.description}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-1">{startup.description}</p>
                     </div>
-                    <Button size="sm">
+                    <Button size="sm" className="ml-4">
                       Mentor
                     </Button>
                   </div>
@@ -279,17 +319,40 @@ const MentorDashboard = ({
 
           <Card>
             <CardHeader>
-              <CardTitle>Mentoring Tips</CardTitle>
+              <CardTitle>Mentoring Excellence</CardTitle>
+              <CardDescription>Best practices for impactful mentoring</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Listen actively and ask thoughtful questions</li>
-                <li>• Share specific examples from your experience</li>
-                <li>• Set clear goals and expectations with mentees</li>
-                <li>• Provide honest and constructive feedback</li>
-                <li>• Connect mentees with relevant opportunities</li>
-                <li>• Follow up regularly on their progress</li>
-              </ul>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Active Listening</p>
+                    <p className="text-xs text-gray-600">Focus on understanding before advising</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Goal Setting</p>
+                    <p className="text-xs text-gray-600">Help mentees define clear, actionable objectives</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Network Sharing</p>
+                    <p className="text-xs text-gray-600">Connect mentees with relevant opportunities</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
+                  <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Regular Check-ins</p>
+                    <p className="text-xs text-gray-600">Maintain consistent communication and support</p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

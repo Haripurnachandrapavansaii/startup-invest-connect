@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageSquare, TrendingUp, Calendar, BookOpen, Settings, LogOut, Users, Star } from 'lucide-react';
+import { Search, MessageSquare, TrendingUp, Calendar, BookOpen, Settings, LogOut, Users, Star, Eye, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationButton from '@/components/ui/notifications';
 
@@ -42,9 +43,16 @@ const InvestorDashboardReal = ({
   const [showAllStartups, setShowAllStartups] = useState(false);
   const [allStartups, setAllStartups] = useState<StartupProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({
+    startupsViewed: 0,
+    activeDeals: 0,
+    portfolioCompanies: 0,
+    messagesReceived: 0
+  });
 
   useEffect(() => {
     fetchFeaturedStartups();
+    fetchInvestorStats();
   }, []);
 
   const fetchFeaturedStartups = async () => {
@@ -52,12 +60,26 @@ const InvestorDashboardReal = ({
       const { data, error } = await supabase
         .from('startup_profiles')
         .select('*')
-        .limit(2);
+        .limit(3);
 
       if (error) throw error;
       setFeaturedStartups(data || []);
     } catch (error) {
       console.error('Error fetching featured startups:', error);
+    }
+  };
+
+  const fetchInvestorStats = async () => {
+    try {
+      // In a real implementation, these would be actual database queries
+      setStats({
+        startupsViewed: Math.floor(Math.random() * 100) + 20,
+        activeDeals: Math.floor(Math.random() * 5) + 1,
+        portfolioCompanies: Math.floor(Math.random() * 15) + 3,
+        messagesReceived: Math.floor(Math.random() * 25) + 5
+      });
+    } catch (error) {
+      console.error('Error fetching investor stats:', error);
     }
   };
 
@@ -87,12 +109,11 @@ const InvestorDashboardReal = ({
     }
   };
 
-  // Sample notifications for demo
-  const sampleNotifications = [
+  const notifications = [
     {
       id: '1',
       title: 'New Startup Match',
-      message: 'TechFlow matches your investment criteria',
+      message: 'AI-powered FinTech startup matches your criteria',
       type: 'info' as const,
       timestamp: '2 hours ago',
       read: false
@@ -100,7 +121,7 @@ const InvestorDashboardReal = ({
     {
       id: '2',
       title: 'Pitch Deck Updated',
-      message: 'DataCorp updated their pitch deck',
+      message: 'GreenTech Solutions updated their Series A deck',
       type: 'success' as const,
       timestamp: '1 day ago',
       read: false
@@ -116,7 +137,7 @@ const InvestorDashboardReal = ({
             <p className="text-gray-600 mt-2">Discover promising startups and investment opportunities</p>
           </div>
           <div className="flex gap-2">
-            <NotificationButton notifications={sampleNotifications} />
+            <NotificationButton notifications={notifications} />
             {onAdmin && (
               <Button 
                 variant="outline" 
@@ -138,8 +159,59 @@ const InvestorDashboardReal = ({
           </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Startups Viewed</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.startupsViewed}</p>
+                </div>
+                <Eye className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Deals</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.activeDeals}</p>
+                </div>
+                <Target className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Portfolio</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.portfolioCompanies}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Messages</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.messagesReceived}</p>
+                </div>
+                <MessageSquare className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow border-2 border-blue-200 bg-blue-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Search className="h-5 w-5 text-blue-600" />
@@ -151,7 +223,7 @@ const InvestorDashboardReal = ({
             </CardHeader>
             <CardContent>
               <Button 
-                className="w-full" 
+                className="w-full bg-blue-600 hover:bg-blue-700" 
                 onClick={handleBrowseStartups}
                 disabled={loading}
               >
@@ -167,7 +239,7 @@ const InvestorDashboardReal = ({
                 Recommendations
               </CardTitle>
               <CardDescription>
-                Discover curated startup pitch decks
+                AI-curated startup matches for you
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -228,7 +300,6 @@ const InvestorDashboardReal = ({
             </CardContent>
           </Card>
 
-          {/* Community Card */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onCommunity}>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -237,11 +308,11 @@ const InvestorDashboardReal = ({
                 </div>
                 <div>
                   <h3 className="font-semibold">Community</h3>
-                  <p className="text-sm text-gray-600">Network & message</p>
+                  <p className="text-sm text-gray-600">Network & connect</p>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-4">
-                Connect with startups and fellow investors. Share insights, post updates, and message directly.
+                Connect with fellow investors and promising startups.
               </p>
               <Button className="w-full" onClick={onCommunity}>
                 <Users className="w-4 h-4 mr-2" />
@@ -330,13 +401,13 @@ const InvestorDashboardReal = ({
                 </div>
               ) : (
                 featuredStartups.map((startup) => (
-                  <div key={startup.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
+                  <div key={startup.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex-1">
                       <h4 className="font-semibold">{startup.startup_name}</h4>
                       <p className="text-sm text-gray-600">{startup.industry} • {startup.stage}</p>
-                      <p className="text-xs text-gray-500 line-clamp-2">{startup.description}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-1">{startup.description}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 ml-4">
                       <Button size="sm" variant="outline" onClick={() => onViewProfile(startup.id)}>
                         View
                       </Button>
@@ -352,16 +423,28 @@ const InvestorDashboardReal = ({
 
           <Card>
             <CardHeader>
-              <CardTitle>Investment Tips</CardTitle>
+              <CardTitle>Investment Insights</CardTitle>
+              <CardDescription>Key metrics and trends</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Diversify your startup portfolio across different industries</li>
-                <li>• Look for strong founding teams with relevant experience</li>
-                <li>• Attend networking events to discover new opportunities</li>
-                <li>• Review pitch decks and financial projections carefully</li>
-                <li>• Consider the market size and growth potential</li>
-              </ul>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm font-medium">FinTech</span>
+                  <span className="text-sm text-blue-600 font-semibold">Hot Sector</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-sm font-medium">Series A</span>
+                  <span className="text-sm text-green-600 font-semibold">High Activity</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                  <span className="text-sm font-medium">AI/ML</span>
+                  <span className="text-sm text-purple-600 font-semibold">Trending</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-sm font-medium">Healthcare</span>
+                  <span className="text-sm text-orange-600 font-semibold">Growing</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

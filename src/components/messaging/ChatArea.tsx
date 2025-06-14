@@ -24,7 +24,7 @@ interface Conversation {
   id: string;
   participantId: string;
   participantName: string;
-  participantRole: 'startup' | 'investor';
+  participantRole: 'startup' | 'investor' | 'mentor';
   lastMessage: string;
   timestamp: string;
   unreadCount: number;

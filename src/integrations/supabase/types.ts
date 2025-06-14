@@ -344,6 +344,59 @@ export type Database = {
           },
         ]
       }
+      pitch_decks: {
+        Row: {
+          created_at: string
+          download_count: number
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          is_active: boolean
+          last_accessed: string | null
+          startup_id: string | null
+          updated_at: string
+          upload_date: string
+        }
+        Insert: {
+          created_at?: string
+          download_count?: number
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          is_active?: boolean
+          last_accessed?: string | null
+          startup_id?: string | null
+          updated_at?: string
+          upload_date?: string
+        }
+        Update: {
+          created_at?: string
+          download_count?: number
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          is_active?: boolean
+          last_accessed?: string | null
+          startup_id?: string | null
+          updated_at?: string
+          upload_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_decks_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startup_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

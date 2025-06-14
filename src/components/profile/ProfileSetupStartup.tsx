@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 interface StartupProfile {
   startupName: string;
   industry: string;
-  stage: string;
+  stage: 'Idea' | 'MVP' | 'Revenue';
   website: string;
   description: string;
   tags: string;
@@ -45,7 +45,7 @@ const ProfileSetupStartup: React.FC<ProfileSetupStartupProps> = ({ onSubmit }) =
     onSubmit(profile);
   };
 
-  const updateProfile = (field: keyof StartupProfile, value: string) => {
+  const updateProfile = (field: keyof StartupProfile, value: string | 'Idea' | 'MVP' | 'Revenue') => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
@@ -84,7 +84,7 @@ const ProfileSetupStartup: React.FC<ProfileSetupStartupProps> = ({ onSubmit }) =
               <select 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 value={profile.stage}
-                onChange={(e) => updateProfile('stage', e.target.value)}
+                onChange={(e) => updateProfile('stage', e.target.value as 'Idea' | 'MVP' | 'Revenue')}
               >
                 <option value="Idea">Idea</option>
                 <option value="MVP">MVP</option>

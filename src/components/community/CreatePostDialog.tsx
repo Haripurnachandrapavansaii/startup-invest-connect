@@ -11,7 +11,7 @@ interface CreatePostDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreatePost: (content: string, imageUrl?: string) => void;
-  userRole?: 'startup' | 'investor';
+  userRole?: 'startup' | 'investor' | 'mentor';
 }
 
 const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
@@ -39,6 +39,8 @@ const CreatePostDialog: React.FC<CreatePostDialogProps> = ({
       return "Share your startup journey, milestones, or insights...";
     } else if (userRole === 'investor') {
       return "Share investment insights, market trends, or advice...";
+    } else if (userRole === 'mentor') {
+      return "Share your mentorship insights, advice, or guidance...";
     }
     return "What's on your mind?";
   };

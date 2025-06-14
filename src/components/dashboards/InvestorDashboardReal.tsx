@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ interface InvestorDashboardRealProps {
   onMessage: (userId: string) => void;
   onEvents: () => void;
   onResources: () => void;
+  onCommunity: () => void;
   onAdmin?: () => void;
   onLogout: () => void;
 }
@@ -20,6 +20,7 @@ const InvestorDashboardReal = ({
   onMessage,
   onEvents,
   onResources,
+  onCommunity,
   onAdmin,
   onLogout 
 }: InvestorDashboardRealProps) => {
@@ -157,19 +158,24 @@ const InvestorDashboardReal = ({
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-indigo-600" />
-                Network
-              </CardTitle>
-              <CardDescription>
-                Connect with other investors
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
+          {/* Community Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onCommunity}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Community</h3>
+                  <p className="text-sm text-gray-600">Network & engage</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Connect with startups and fellow investors. Share insights and discover opportunities.
+              </p>
+              <Button className="w-full" onClick={onCommunity}>
+                <Users className="w-4 h-4 mr-2" />
+                Explore Community
               </Button>
             </CardContent>
           </Card>

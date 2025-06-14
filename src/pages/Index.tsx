@@ -14,6 +14,7 @@ import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
 import StartupProfileViewScreen from '@/components/screens/StartupProfileViewScreen';
 import EventsScreen from '@/components/screens/EventsScreen';
 import ResourcesScreen from '@/components/screens/ResourcesScreen';
+import CommunityScreen from '@/components/screens/CommunityScreen';
 import AdminScreen from '@/components/screens/AdminScreen';
 
 const Index = () => {
@@ -157,6 +158,14 @@ const Index = () => {
           />
         );
 
+      case 'community':
+        return (
+          <CommunityScreen
+            onBack={() => setCurrentScreen('dashboard')}
+            onMessage={handleMessage}
+          />
+        );
+
       case 'admin':
         return (
           <AdminScreen
@@ -175,6 +184,7 @@ const Index = () => {
               onMessages={() => setCurrentScreen('messageInbox')}
               onEvents={() => setCurrentScreen('events')}
               onResources={() => setCurrentScreen('resources')}
+              onCommunity={() => setCurrentScreen('community')}
               onAdmin={isAdmin ? () => setCurrentScreen('admin') : undefined}
               onLogout={handleLogout}
             />
@@ -187,6 +197,7 @@ const Index = () => {
               onMessage={handleMessage}
               onEvents={() => setCurrentScreen('events')}
               onResources={() => setCurrentScreen('resources')}
+              onCommunity={() => setCurrentScreen('community')}
               onAdmin={isAdmin ? () => setCurrentScreen('admin') : undefined}
               onLogout={handleLogout}
             />

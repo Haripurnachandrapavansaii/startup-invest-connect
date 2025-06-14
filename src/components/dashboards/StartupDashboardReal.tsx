@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ interface StartupDashboardRealProps {
   onMessages: () => void;
   onEvents: () => void;
   onResources: () => void;
+  onCommunity: () => void;
   onAdmin?: () => void;
   onLogout: () => void;
 }
@@ -22,6 +22,7 @@ const StartupDashboardReal = ({
   onMessages,
   onEvents,
   onResources,
+  onCommunity,
   onAdmin,
   onLogout 
 }: StartupDashboardRealProps) => {
@@ -141,19 +142,24 @@ const StartupDashboardReal = ({
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-indigo-600" />
-                Community
-              </CardTitle>
-              <CardDescription>
-                Connect with other entrepreneurs in your area
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
+          {/* Community Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onCommunity}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Community</h3>
+                  <p className="text-sm text-gray-600">Connect with others</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Join the community to share updates, network, and engage with other startups and investors.
+              </p>
+              <Button className="w-full" onClick={onCommunity}>
+                <Users className="w-4 h-4 mr-2" />
+                Join Community
               </Button>
             </CardContent>
           </Card>

@@ -52,9 +52,7 @@ export const useCommunity = () => {
         .from('community_posts')
         .select(`
           *,
-          author:profiles!community_posts_author_id_fkey(full_name, role),
-          likes:community_likes(count),
-          comments:community_comments(count)
+          author:profiles!community_posts_author_id_fkey(full_name, role)
         `)
         .order('created_at', { ascending: false });
 
@@ -111,7 +109,13 @@ export const useCommunity = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Filter and cast users to ensure they have valid roles
+      const validUsers = (data || []).filter(user => 
+        user.role === 'startup' || user.role === 'investor'
+      ) as User[];
+      
+      setUsers(validUsers);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({

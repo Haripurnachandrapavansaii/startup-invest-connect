@@ -36,7 +36,7 @@ interface User {
   id: string;
   full_name: string;
   email: string;
-  role: 'startup' | 'investor';
+  role: 'startup' | 'investor' | 'mentor';
   created_at: string;
 }
 

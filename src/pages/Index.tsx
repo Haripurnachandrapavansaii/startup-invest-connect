@@ -10,6 +10,7 @@ import InvestorDashboardReal from '@/components/dashboards/InvestorDashboardReal
 import MatchInvestorsScreenReal from '@/components/screens/MatchInvestorsScreenReal';
 import PitchUploadScreen from '@/components/screens/PitchUploadScreen';
 import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
+import StartupProfileViewScreen from '@/components/screens/StartupProfileViewScreen';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -23,6 +24,8 @@ const Index = () => {
   } = useProfile(user?.id);
 
   const [currentScreen, setCurrentScreen] = React.useState<string>('dashboard');
+  const [selectedStartupId, setSelectedStartupId] = React.useState<string>('');
+  const [selectedUserId, setSelectedUserId] = React.useState<string>('');
   const [setupLoading, setSetupLoading] = React.useState(false);
 
   const handleStartupProfileSubmit = async (profileData: any) => {
@@ -48,8 +51,15 @@ const Index = () => {
     setCurrentScreen('dashboard');
   };
 
-  const handleMessage = (targetId: string) => {
-    console.log('Opening message thread with:', targetId);
+  const handleViewProfile = (startupId: string) => {
+    console.log('Viewing startup profile:', startupId);
+    setSelectedStartupId(startupId);
+    setCurrentScreen('viewStartupProfile');
+  };
+
+  const handleMessage = (userId: string) => {
+    console.log('Opening message thread with user:', userId);
+    setSelectedUserId(userId);
     setCurrentScreen('messageInbox');
   };
 
@@ -113,6 +123,16 @@ const Index = () => {
         return (
           <MessageInboxScreen
             onBack={() => setCurrentScreen('dashboard')}
+            selectedUserId={selectedUserId}
+          />
+        );
+
+      case 'viewStartupProfile':
+        return (
+          <StartupProfileViewScreen
+            startupId={selectedStartupId}
+            onBack={() => setCurrentScreen('dashboard')}
+            onMessage={handleMessage}
           />
         );
 
@@ -131,7 +151,7 @@ const Index = () => {
           return (
             <InvestorDashboardReal
               investorName={investorProfile?.investor_name || 'Investor'}
-              onViewProfile={(startupId) => console.log('View profile:', startupId)}
+              onViewProfile={handleViewProfile}
               onMessage={handleMessage}
               onLogout={handleLogout}
             />

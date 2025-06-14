@@ -25,13 +25,16 @@ interface Conversation {
 
 interface MessageInboxScreenProps {
   onBack: () => void;
+  selectedUserId?: string;
 }
 
-const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack }) => {
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack, selectedUserId }) => {
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(
+    selectedUserId || null
+  );
   const [newMessage, setNewMessage] = useState('');
 
-  // Mock conversations data
+  // Mock conversations data - in real app, this would come from Supabase
   const mockConversations: Conversation[] = [
     {
       id: '1',
@@ -50,6 +53,13 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack }) => {
       unreadCount: 0
     }
   ];
+
+  // If selectedUserId is provided, add it as a new conversation
+  React.useEffect(() => {
+    if (selectedUserId && !selectedConversation) {
+      setSelectedConversation(selectedUserId);
+    }
+  }, [selectedUserId, selectedConversation]);
 
   // Mock messages for selected conversation
   const mockMessages: Message[] = [
@@ -81,8 +91,8 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack }) => {
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      // In real app, this would send the message to the backend
-      console.log('Sending message:', newMessage);
+      // In real app, this would send the message to Supabase
+      console.log('Sending message:', newMessage, 'to user:', selectedConversation);
       setNewMessage('');
     }
   };
@@ -140,6 +150,30 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack }) => {
                       <p className="text-xs text-gray-400 mt-1">{conversation.timestamp}</p>
                     </div>
                   ))}
+                  
+                  {/* Show new conversation if selectedUserId is provided */}
+                  {selectedUserId && !mockConversations.find(c => c.id === selectedUserId) && (
+                    <div
+                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                        selectedConversation === selectedUserId ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                      onClick={() => setSelectedConversation(selectedUserId)}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-medium text-sm">New Conversation</h4>
+                        <span className="bg-green-600 text-white rounded-full px-2 py-1 text-xs">
+                          New
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-1">
+                        <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                          User ID: {selectedUserId.slice(0, 8)}...
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600 truncate">Start a new conversation</p>
+                      <p className="text-xs text-gray-400 mt-1">Just now</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -151,36 +185,48 @@ const MessageInboxScreen: React.FC<MessageInboxScreenProps> = ({ onBack }) => {
               <>
                 <CardHeader>
                   <CardTitle>
-                    {mockConversations.find(c => c.id === selectedConversation)?.participantName}
+                    {selectedConversation === selectedUserId 
+                      ? 'New Conversation' 
+                      : mockConversations.find(c => c.id === selectedConversation)?.participantName
+                    }
                   </CardTitle>
                   <CardDescription>
-                    {mockConversations.find(c => c.id === selectedConversation)?.participantRole}
+                    {selectedConversation === selectedUserId 
+                      ? `User ID: ${selectedUserId}` 
+                      : mockConversations.find(c => c.id === selectedConversation)?.participantRole
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col h-full">
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
-                    {mockMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.isFromCurrentUser
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
-                          }`}
-                        >
-                          <p className="text-sm">{message.message}</p>
-                          <p className={`text-xs mt-1 ${
-                            message.isFromCurrentUser ? 'text-blue-100' : 'text-gray-500'
-                          }`}>
-                            {message.timestamp}
-                          </p>
-                        </div>
+                    {selectedConversation === selectedUserId ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <p>Start your conversation by sending a message below!</p>
                       </div>
-                    ))}
+                    ) : (
+                      mockMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex ${message.isFromCurrentUser ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              message.isFromCurrentUser
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-900'
+                            }`}
+                          >
+                            <p className="text-sm">{message.message}</p>
+                            <p className={`text-xs mt-1 ${
+                              message.isFromCurrentUser ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
+                              {message.timestamp}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Message Input */}

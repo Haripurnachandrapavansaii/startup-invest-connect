@@ -13,12 +13,13 @@ interface StartupProfile {
   tags: string;
   description: string;
   funding_needed: string;
+  user_id: string;
 }
 
 interface InvestorDashboardRealProps {
   investorName: string;
   onViewProfile: (startupId: string) => void;
-  onMessage: (startupId: string) => void;
+  onMessage: (userId: string) => void;
   onLogout: () => void;
 }
 
@@ -130,7 +131,7 @@ const InvestorDashboardReal: React.FC<InvestorDashboardRealProps> = ({
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => onMessage(startup.id)}
+                        onClick={() => onMessage(startup.user_id)}
                         className="flex items-center gap-1"
                       >
                         <MessageCircle className="w-3 h-3" />

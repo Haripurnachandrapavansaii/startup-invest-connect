@@ -128,6 +128,25 @@ export const useMessages = (currentUserId: string | undefined) => {
     if (!currentUserId || !messageText.trim()) return false;
     
     try {
+      console.log('Sending message from:', currentUserId, 'to:', toUserId);
+      
+      // Verify that the recipient exists in the profiles table
+      const { data: recipientProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', toUserId)
+        .single();
+
+      if (profileError || !recipientProfile) {
+        console.error('Recipient not found in profiles table:', toUserId);
+        toast({
+          title: "Error",
+          description: "Recipient not found. Please try again.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('messages')
         .insert({

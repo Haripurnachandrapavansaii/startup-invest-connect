@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageSquare, TrendingUp, Calendar, BookOpen, Settings, LogOut, Users } from 'lucide-react';
+import { Search, MessageSquare, TrendingUp, Calendar, BookOpen, Settings, LogOut, Users, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import NotificationButton from '@/components/ui/notifications';
 
 interface StartupProfile {
   id: string;
@@ -40,6 +40,7 @@ const InvestorDashboardReal = ({
   const [showAllStartups, setShowAllStartups] = useState(false);
   const [allStartups, setAllStartups] = useState<StartupProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState('browse');
 
   useEffect(() => {
     fetchFeaturedStartups();
@@ -85,6 +86,26 @@ const InvestorDashboardReal = ({
     }
   };
 
+  // Sample notifications for demo
+  const sampleNotifications = [
+    {
+      id: '1',
+      title: 'New Startup Match',
+      message: 'TechFlow matches your investment criteria',
+      type: 'info' as const,
+      timestamp: '2 hours ago',
+      read: false
+    },
+    {
+      id: '2',
+      title: 'Pitch Deck Updated',
+      message: 'DataCorp updated their pitch deck',
+      type: 'success' as const,
+      timestamp: '1 day ago',
+      read: false
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -94,6 +115,7 @@ const InvestorDashboardReal = ({
             <p className="text-gray-600 mt-2">Discover promising startups and investment opportunities</p>
           </div>
           <div className="flex gap-2">
+            <NotificationButton notifications={sampleNotifications} />
             {onAdmin && (
               <Button 
                 variant="outline" 
@@ -133,6 +155,23 @@ const InvestorDashboardReal = ({
                 disabled={loading}
               >
                 {loading ? 'Loading...' : showAllStartups ? 'Hide All Startups' : 'Browse All Startups'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-600" />
+                Recommendations
+              </CardTitle>
+              <CardDescription>
+                Discover curated startup pitch decks
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" onClick={() => setCurrentScreen('recommendations')}>
+                View Recommendations
               </Button>
             </CardContent>
           </Card>
@@ -197,7 +236,7 @@ const InvestorDashboardReal = ({
                 </div>
                 <div>
                   <h3 className="font-semibold">Community</h3>
-                  <p className="text-sm text-gray-600">Network, post & message</p>
+                  <p className="text-sm text-gray-600">Network & message</p>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-4">

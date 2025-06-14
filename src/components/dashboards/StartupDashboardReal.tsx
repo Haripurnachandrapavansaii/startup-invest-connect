@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, MessageSquare, Upload, Users, Calendar, BookOpen, Settings, LogOut } from 'lucide-react';
+import { TrendingUp, MessageSquare, Upload, Users, Calendar, BookOpen, Settings, LogOut, Star } from 'lucide-react';
+import NotificationButton from '@/components/ui/notifications';
 
 interface StartupDashboardRealProps {
   startupName: string;
@@ -26,6 +27,26 @@ const StartupDashboardReal = ({
   onAdmin,
   onLogout 
 }: StartupDashboardRealProps) => {
+  // Sample notifications for demo
+  const sampleNotifications = [
+    {
+      id: '1',
+      title: 'Investor Interest',
+      message: 'BlueVenture Capital viewed your profile',
+      type: 'success' as const,
+      timestamp: '1 hour ago',
+      read: false
+    },
+    {
+      id: '2',
+      title: 'Event Reminder',
+      message: 'Startup Pitch Night tomorrow at 6 PM',
+      type: 'info' as const,
+      timestamp: '3 hours ago',
+      read: true
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -35,6 +56,7 @@ const StartupDashboardReal = ({
             <p className="text-gray-600 mt-2">Ready to take your startup to the next level?</p>
           </div>
           <div className="flex gap-2">
+            <NotificationButton notifications={sampleNotifications} />
             {onAdmin && (
               <Button 
                 variant="outline" 

@@ -8,6 +8,9 @@ import ProfileSetupStartup from '@/components/profile/ProfileSetupStartup';
 import ProfileSetupInvestor from '@/components/profile/ProfileSetupInvestor';
 import StartupDashboard from '@/components/dashboards/StartupDashboard';
 import InvestorDashboard from '@/components/dashboards/InvestorDashboard';
+import MatchInvestorsScreen from '@/components/screens/MatchInvestorsScreen';
+import PitchUploadScreen from '@/components/screens/PitchUploadScreen';
+import MessageInboxScreen from '@/components/screens/MessageInboxScreen';
 
 const Index = () => {
   const {
@@ -46,6 +49,11 @@ const Index = () => {
   const handleRegistrationNext = (userData: { fullName: string; email: string; password: string }) => {
     setTempRegistrationData(userData);
     navigateToScreen('roleSelection');
+  };
+
+  const handleMessage = (targetId: string) => {
+    console.log('Opening message thread with:', targetId);
+    navigateToScreen('messageInbox');
   };
 
   const renderCurrentScreen = () => {
@@ -104,8 +112,38 @@ const Index = () => {
             investorName={appState.investorProfile?.investorName || 'Investor'}
             matchedStartups={mockMatchedStartups}
             onViewProfile={(startupId) => console.log('View profile:', startupId)}
-            onMessage={(startupId) => console.log('Message startup:', startupId)}
+            onMessage={handleMessage}
             onLogout={logout}
+          />
+        );
+
+      case 'matchInvestors':
+        return (
+          <MatchInvestorsScreen
+            onBack={() => navigateToScreen('startupDashboard')}
+            onMessage={handleMessage}
+          />
+        );
+
+      case 'pitchUpload':
+        return (
+          <PitchUploadScreen
+            onBack={() => navigateToScreen('startupDashboard')}
+          />
+        );
+
+      case 'messageInbox':
+        return (
+          <MessageInboxScreen
+            onBack={() => {
+              // Navigate back to appropriate dashboard based on user role
+              const userRole = appState.currentUser?.role || appState.tempRegistrationData?.role;
+              if (userRole === 'startup') {
+                navigateToScreen('startupDashboard');
+              } else {
+                navigateToScreen('investorDashboard');
+              }
+            }}
           />
         );
       

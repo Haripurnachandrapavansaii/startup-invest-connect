@@ -1,12 +1,13 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useAdmin } from '@/hooks/useAdmin';
 import AuthScreen from '@/components/auth/AuthScreen';
-import MentorLoginScreen from '@/components/auth/MentorLoginScreen';
 import StartupProfileSetup from '@/components/profile/StartupProfileSetup';
 import InvestorProfileSetup from '@/components/profile/InvestorProfileSetup';
+import MentorProfileSetup from '@/components/profile/MentorProfileSetup';
 import StartupDashboardReal from '@/components/dashboards/StartupDashboardReal';
 import InvestorDashboardReal from '@/components/dashboards/InvestorDashboardReal';
 import MentorDashboard from '@/components/dashboards/MentorDashboard';
@@ -21,7 +22,7 @@ import AdminScreen from '@/components/screens/AdminScreen';
 import RecommendationsScreen from '@/components/screens/RecommendationsScreen';
 
 const Index = () => {
-  const { user, loading: authLoading, signOut, signIn } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { 
     profile, 
     startupProfile, 
@@ -38,13 +39,12 @@ const Index = () => {
   const [selectedStartupId, setSelectedStartupId] = React.useState<string>('');
   const [selectedUserId, setSelectedUserId] = React.useState<string>('');
   const [setupLoading, setSetupLoading] = React.useState(false);
-  const [isMentorMode, setIsMentorMode] = React.useState(false);
 
   const handleStartupProfileSubmit = async (profileData: any) => {
     setSetupLoading(true);
     const success = await saveStartupProfile(profileData);
     if (success) {
-      await refetchProfile(); // Refresh profile data
+      await refetchProfile();
       setCurrentScreen('dashboard');
     }
     setSetupLoading(false);
@@ -54,16 +54,27 @@ const Index = () => {
     setSetupLoading(true);
     const success = await saveInvestorProfile(profileData);
     if (success) {
-      await refetchProfile(); // Refresh profile data
+      await refetchProfile();
       setCurrentScreen('dashboard');
     }
     setSetupLoading(false);
   };
 
+  const handleMentorProfileSubmit = async (profileData: any) => {
+    // For now, we'll save mentor data in a similar way
+    // In a real app, you'd have a saveMentorProfile function
+    console.log('Mentor profile data:', profileData);
+    setSetupLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setCurrentScreen('dashboard');
+      setSetupLoading(false);
+    }, 1000);
+  };
+
   const handleLogout = async () => {
     await signOut();
     setCurrentScreen('dashboard');
-    setIsMentorMode(false);
   };
 
   const handleViewProfile = (startupId: string) => {
@@ -76,19 +87,6 @@ const Index = () => {
     console.log('Opening message thread with user:', userId);
     setSelectedUserId(userId);
     setCurrentScreen('messageInbox');
-  };
-
-  const handleMentorLogin = async (credentials: { email: string; password: string }) => {
-    const success = await signIn(credentials.email, credentials.password);
-    if (success) {
-      setIsMentorMode(true);
-      setCurrentScreen('dashboard');
-    }
-  };
-
-  const handleBackToMainAuth = () => {
-    setIsMentorMode(false);
-    setCurrentScreen('dashboard');
   };
 
   if (authLoading) {
@@ -137,33 +135,18 @@ const Index = () => {
     );
   }
 
+  if (profile.role === 'mentor' && currentScreen === 'dashboard') {
+    // For mentors, we'll show the profile setup once and then go to dashboard
+    // In a real app, you'd check if mentor profile exists
+    return (
+      <MentorProfileSetup 
+        onSubmit={handleMentorProfileSubmit}
+        loading={setupLoading}
+      />
+    );
+  }
+
   const renderCurrentScreen = () => {
-    if (currentScreen === 'mentorLogin') {
-      return (
-        <MentorLoginScreen
-          onBack={handleBackToMainAuth}
-          onLogin={handleMentorLogin}
-          loading={setupLoading}
-        />
-      );
-    }
-
-    if (isMentorMode) {
-      return (
-        <MentorDashboard
-          mentorName="Mentor"
-          onStartups={() => setCurrentScreen('dashboard')}
-          onMessages={() => setCurrentScreen('messageInbox')}
-          onSchedule={() => setCurrentScreen('events')}
-          onResources={() => setCurrentScreen('resources')}
-          onLogout={() => {
-            handleLogout();
-            setIsMentorMode(false);
-          }}
-        />
-      );
-    }
-
     switch (currentScreen) {
       case 'recommendations':
         return (
@@ -251,7 +234,7 @@ const Index = () => {
               onLogout={handleLogout}
             />
           );
-        } else {
+        } else if (profile.role === 'investor') {
           return (
             <InvestorDashboardReal
               investorName={investorProfile?.investor_name || profile.full_name || 'Investor'}
@@ -265,24 +248,23 @@ const Index = () => {
               onLogout={handleLogout}
             />
           );
+        } else if (profile.role === 'mentor') {
+          return (
+            <MentorDashboard
+              mentorName={profile.full_name || 'Mentor'}
+              onStartups={() => setCurrentScreen('dashboard')}
+              onMessages={() => setCurrentScreen('messageInbox')}
+              onSchedule={() => setCurrentScreen('events')}
+              onResources={() => setCurrentScreen('resources')}
+              onLogout={handleLogout}
+            />
+          );
         }
     }
   };
 
   return (
     <div className="min-h-screen">
-      {/* Add Mentor Login Button to Auth Screen */}
-      {!user && currentScreen === 'dashboard' && (
-        <div className="fixed top-4 right-4 z-50">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentScreen('mentorLogin')}
-            className="bg-purple-100 text-purple-700 hover:bg-purple-200"
-          >
-            Mentor Login
-          </Button>
-        </div>
-      )}
       {renderCurrentScreen()}
     </div>
   );

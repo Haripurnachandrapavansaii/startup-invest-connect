@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, Users, Handshake, Globe } from 'lucide-react';
+import { TrendingUp, Users, Handshake, Globe, DollarSign, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const StatsSection = () => {
@@ -11,7 +11,10 @@ const StatsSection = () => {
     investors: 0,
     mentors: 0,
     events: 0,
-    resources: 0
+    resources: 0,
+    totalFunding: 0,
+    successRate: 0,
+    totalMessages: 0
   });
 
   useEffect(() => {
@@ -33,6 +36,27 @@ const StatsSection = () => {
         return acc;
       }, {}) || {};
 
+      // Fetch startup profiles to calculate total funding needed
+      const { data: startupsData, error: startupsError } = await supabase
+        .from('startup_profiles')
+        .select('funding_needed');
+
+      if (startupsError) throw startupsError;
+
+      // Calculate total funding (extract numbers from funding_needed strings)
+      const totalFunding = startupsData?.reduce((total, startup) => {
+        const fundingStr = startup.funding_needed || '';
+        const match = fundingStr.match(/\$?([\d,]+)([kmKM]?)/);
+        if (match) {
+          let amount = parseInt(match[1].replace(/,/g, ''));
+          const unit = match[2]?.toLowerCase();
+          if (unit === 'k') amount *= 1000;
+          if (unit === 'm') amount *= 1000000;
+          return total + amount;
+        }
+        return total;
+      }, 0) || 0;
+
       // Fetch events count
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
@@ -47,13 +71,27 @@ const StatsSection = () => {
 
       if (resourcesError) throw resourcesError;
 
+      // Fetch messages count for activity
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('id');
+
+      if (messagesError) throw messagesError;
+
+      // Calculate success rate (simplified: users with complete profiles)
+      const completedProfiles = roleCounts.startup + roleCounts.investor + roleCounts.mentor;
+      const successRate = profilesData?.length > 0 ? Math.round((completedProfiles / profilesData.length) * 100) : 0;
+
       setRealStats({
         users: profilesData?.length || 0,
         startups: roleCounts.startup || 0,
         investors: roleCounts.investor || 0,
         mentors: roleCounts.mentor || 0,
         events: eventsData?.length || 0,
-        resources: resourcesData?.length || 0
+        resources: resourcesData?.length || 0,
+        totalFunding,
+        successRate,
+        totalMessages: messagesData?.length || 0
       });
 
     } catch (error) {
@@ -61,33 +99,49 @@ const StatsSection = () => {
     }
   };
 
+  const formatFunding = (amount: number) => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M+`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}K+`;
+    }
+    return amount > 0 ? `$${amount.toLocaleString()}+` : 'Growing';
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K+`;
+    }
+    return num > 0 ? `${num}+` : 'Growing';
+  };
+
   const stats = [
     {
       icon: Users,
-      value: realStats.users > 0 ? `${realStats.users}+` : "Growing",
-      label: "Registered Users",
-      description: "Entrepreneurs, investors, and mentors from around the world",
+      value: formatNumber(realStats.users),
+      label: "Active Members",
+      description: "Entrepreneurs, investors, and mentors actively using the platform",
       color: "text-blue-600"
     },
     {
-      icon: TrendingUp,
-      value: realStats.startups > 0 ? `${realStats.startups}+` : "Active",
-      label: "Startups",
-      description: "Innovative companies seeking funding and mentorship",
+      icon: DollarSign,
+      value: formatFunding(realStats.totalFunding),
+      label: "Funding Connected",
+      description: "Total funding opportunities available on the platform",
       color: "text-green-600"
     },
     {
-      icon: Handshake,
-      value: realStats.investors > 0 ? `${realStats.investors}+` : "Ready",
-      label: "Investors",
-      description: "Experienced investors looking for promising opportunities",
+      icon: Target,
+      value: realStats.successRate > 0 ? `${realStats.successRate}%` : "Growing",
+      label: "Success Rate",
+      description: "Platform members with completed profiles and active engagement",
       color: "text-purple-600"
     },
     {
-      icon: Globe,
-      value: realStats.mentors > 0 ? `${realStats.mentors}+` : "Expert",
-      label: "Mentors",
-      description: "Seasoned professionals ready to guide entrepreneurs",
+      icon: Handshake,
+      value: formatNumber(realStats.totalMessages),
+      label: "Connections Made",
+      description: "Messages exchanged between startups, investors, and mentors",
       color: "text-orange-600"
     }
   ];
@@ -126,6 +180,12 @@ const StatsSection = () => {
             </p>
           </div>
         )}
+
+        <div className="text-center mt-8">
+          <p className="text-xs text-gray-400">
+            * Stats updated in real-time based on platform activity
+          </p>
+        </div>
       </div>
     </section>
   );

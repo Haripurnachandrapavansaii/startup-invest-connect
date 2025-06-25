@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
 
 interface RegisterScreenProps {
@@ -17,19 +17,20 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ role, onBackToRoleSelec
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useAuth();
 
-  const handleNext = () => {
+  const handleCreateAccount = async () => {
     if (!fullName || !email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       return;
     }
-    // Handle registration logic here
-    console.log('Registration data:', { fullName, email, password, role });
+
+    setLoading(true);
+    const success = await signUp(email, password, fullName, role);
+    setLoading(false);
+    
+    // If successful, the user will be redirected automatically by the auth state change
+    console.log('Registration attempt completed:', success);
   };
 
   const getRoleColor = () => {
@@ -64,6 +65,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ role, onBackToRoleSelec
               placeholder="Enter your full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -74,6 +76,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ role, onBackToRoleSelec
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -84,13 +87,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ role, onBackToRoleSelec
               placeholder="Create a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
-          <Button onClick={handleNext} className="w-full">
-            Create Account
+          <Button 
+            onClick={handleCreateAccount} 
+            className="w-full" 
+            disabled={loading || !fullName || !email || !password}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
           </Button>
           <div className="text-center">
-            <Button variant="link" onClick={onSwitchToLogin}>
+            <Button variant="link" onClick={onSwitchToLogin} disabled={loading}>
               Already have an account? Login
             </Button>
           </div>
